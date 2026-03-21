@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- SEO -->
+<title>Comparador de Whey Protein — Melhor Custo Benefício em 2025</title>
+<meta name="description" content="Compare o custo benefício real dos melhores wheys protein do Brasil. Calcule o valor por grama de proteína e ache onde comprar mais barato.">
+<meta name="keywords" content="whey protein melhor custo beneficio, comparador whey, whey protein barato, proteina por real">
+<link rel="canonical" href="https://seusite.com.br/">
+
+<!-- Open Graph (compartilhamento em redes sociais) -->
+<meta property="og:title" content="Comparador de Whey Protein — Custo Benefício Real">
+<meta property="og:description" content="Descubra qual whey entrega mais proteína por real investido.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ─── Reset & Variáveis ───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0e0f11;
+  --bg2:      #18191d;
+  --bg3:      #222328;
+  --border:   #2e2f35;
+  --text:     #e8e9ec;
+  --muted:    #7a7c84;
+  --accent:   #c8f135;      /* verde-lima elétrico */
+  --accent2:  #3bdfb0;      /* teal para 2º lugar */
+  --danger:   #ff5c5c;
+  --gold:     #ffc947;
+  --ml:       #ffe600;      /* amarelo ML */
+  --shopee:   #ff5722;      /* laranja Shopee */
+  --amazon:   #ff9900;      /* laranja Amazon */
+  --r:        12px;
+  --r-sm:     8px;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ─── Header ──────────────────────────────────────────────── */
+header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 60px;
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.logo span { color: var(--text); }
+
+.last-update {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+/* ─── Hero ────────────────────────────────────────────────── */
+.hero {
+  padding: 48px 24px 32px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 1;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.hero p {
+  color: var(--muted);
+  font-size: 15px;
+  max-width: 520px;
+  margin-bottom: 28px;
+}
+
+/* ─── Calculadora de meta proteica ───────────────────────── */
+.calculator {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 24px;
+  max-width: 900px;
+  margin: 0 auto 32px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.calc-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.calc-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.calc-input-wrap input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  height: 4px;
+}
+
+.calc-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--accent);
+  min-width: 80px;
+  text-align: right;
+}
+
+.calc-hint {
+  font-size: 12px;
+  color: var(--muted);
+  width: 100%;
+}
+
+/* ─── Ranking ──────────────────────────────────────────────── */
+.section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+/* Loading skeleton */
+.skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-card {
+  background: var(--bg2);
+  border-radius: var(--r);
+  height: 88px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+
+.skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Cards do ranking */
+#ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  transition: border-color .2s, transform .15s;
+  animation: fadeUp .4s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card:hover {
+  border-color: #3e3f47;
+  transform: translateY(-1px);
+}
+
+/* Posição */
+.card-pos {
+  font-family: var(--font-display);
+  font-size: 28px;
+  text-align: center;
+  line-height: 1;
+}
+
+.card-pos.pos-1 { color: var(--accent); }
+.card-pos.pos-2 { color: var(--accent2); }
+.card-pos.pos-3 { color: var(--gold); }
+.card-pos.pos-other { color: var(--muted); }
+
+/* Info do produto */
+.card-info {}
+.card-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.card-brand {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.card-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pill.highlight {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Preço e botões */
+.card-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.card-price {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.card-price-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.card-dose-info {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Botões de plataforma */
+.btn-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.btn-store {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+
+.btn-store:hover { opacity: .8; }
+.btn-store.best { box-shadow: 0 0 0 1px rgba(255,255,255,0.2); }
+
+.btn-ml     { background: var(--ml);     color: #111; }
+.btn-shopee { background: var(--shopee); color: #fff; }
+.btn-amazon { background: var(--amazon); color: #111; }
+
+/* Badge "mais barato" */
+.badge-best {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #111;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+/* ─── Estado de erro ──────────────────────────────────────── */
+.error-msg {
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
+}
+
+.error-msg strong { color: var(--danger); display: block; margin-bottom: 8px; }
+
+/* ─── Footer ──────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+footer a { color: var(--muted); }
+
+/* ─── Responsivo ──────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .card {
+    grid-template-columns: 36px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .card-right {
+    grid-column: 2;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .btn-group { justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Header ──────────────────────────────────────────────── -->
+<header>
+  <a class="logo" href="/"><em>WHEY</em><span>RANK</span></a>
+  <div class="last-update">
+    <span class="dot"></span>
+    <span id="last-update-text">Atualizando preços...</span>
+  </div>
+</header>
+
+<!-- ─── Hero ────────────────────────────────────────────────── -->
+<section class="hero">
+  <h1>Qual whey dá mais<br><em>proteína por real?</em></h1>
+  <p>Comparamos o custo real por grama de proteína — não só o preço do pote. Atualizado automaticamente.</p>
+</section>
+
+<!-- ─── Calculadora ──────────────────────────────────────────── -->
+<div class="calculator">
+  <div class="calc-label">Meta de proteína por dose</div>
+  <div class="calc-input-wrap">
+    <input type="range" id="meta-prot" min="15" max="40" value="24" step="1"
+           oninput="atualizarMeta(this.value)">
+    <div class="calc-value"><span id="meta-valor">24</span>g</div>
+  </div>
+  <div class="calc-hint">
+    Ajuste a quantidade de proteína que você quer ingerir por dose — o ranking recalcula automaticamente o custo e a quantidade de pó necessária.
+  </div>
+</div>
+
+<!-- ─── Ranking ──────────────────────────────────────────────── -->
+<section class="section">
+  <div class="section-title">RANKING — melhor custo por proteína</div>
+
+  <!-- Skeleton enquanto carrega -->
+  <div class="skeleton-wrap" id="skeleton">
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+  </div>
+
+  <!-- Lista real -->
+  <div id="ranking-list" style="display:none"></div>
+</section>
+
+<!-- ─── Footer ──────────────────────────────────────────────── -->
+<footer>
+  <p>Preços coletados automaticamente do Mercado Livre, Shopee e Amazon Brasil.</p>
+  <p>Os links são de afiliado — ao comprar, você apoia o site sem pagar nada a mais. 🤝</p>
+  <p style="margin-top:8px"><a href="#">Sobre</a> · <a href="#">Sugerir produto</a> · <a href="#">Contato</a></p>
+</footer>
+
+<script>
+// ─── CONFIG — substitua com seus dados do Supabase ────────────
+const SUPABASE_URL = 'https://biyndcbydqbnohzpuxnn.supabase.co';
+const SUPABASE_KEY = 'Ssb_secret_wpoLqGcqEUN8cDbjHyJLJA_xiDbJPp1';     // Chave anon — pode deixar pública
+
+// ─── Estado ───────────────────────────────────────────────────
+let wheys = [];
+let metaProt = 24;   // gramas de proteína por dose desejada pelo usuário
+
+// ─── Fetch dos dados ──────────────────────────────────────────
+async function carregarDados() {
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/ranking_wheys?select=*`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        }
+      }
+    );
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    wheys = await resp.json();
+
+    document.getElementById('skeleton').style.display = 'none';
+    document.getElementById('ranking-list').style.display = 'flex';
+
+    // Atualiza texto de última atualização
+    document.getElementById('last-update-text').textContent =
+      `Preços atualizados hoje`;
+
+    renderizar();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('skeleton').innerHTML = `
+      <div class="error-msg">
+        <strong>Não foi possível carregar os dados.</strong>
+        Verifique a configuração do Supabase no código.
+      </div>
+    `;
+  }
+}
+
+// ─── Cálculo principal ────────────────────────────────────────
+function calcularParaMeta(whey, metaG) {
+  // Quantas gramas de pó são necessárias para atingir metaG de proteína
+  const proporcaoProt = whey.prot_por_dose / whey.dose_g;   // g prot / g pó
+  const gPoNecessario = metaG / proporcaoProt;                // g de pó
+
+  // Número de doses necessárias (pode ser fração)
+  const dosesNecessarias = gPoNecessario / whey.dose_g;
+
+  // Custo dessa quantidade de pó (baseado no preço por dose)
+  const custoPorDose = whey.preco_atual / whey.num_doses;
+  const custoParaMeta = custoPorDose * dosesNecessarias;
+
+  return {
+    gPoNecessario:  Math.round(gPoNecessario),
+    dosesNecessarias,
+    custoParaMeta,
+  };
+}
+
+// ─── Renderização ─────────────────────────────────────────────
+function renderizar() {
+  // Recalcula e ordena por custo para a meta atual
+  const ordenados = wheys
+    .map(w => ({
+      ...w,
+      ...calcularParaMeta(w, metaProt),
+    }))
+    .sort((a, b) => a.custoParaMeta - b.custoParaMeta);
+
+  const container = document.getElementById('ranking-list');
+  container.innerHTML = '';
+
+  ordenados.forEach((w, i) => {
+    const pos   = i + 1;
+    const clase = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-other';
+
+    const perc  = Math.round((w.prot_por_dose / w.dose_g) * 100);
+    const vlrKg = w.vlr_por_kg_prot
+      ? `R$${parseFloat(w.vlr_por_kg_prot).toFixed(2)}/kg prot`
+      : '';
+
+    // Botões de loja (só mostra se tiver link)
+    let botoes = '';
+    const plataformas = [
+      { key: 'mercadolivre', label: 'Mercado Livre', cls: 'btn-ml', link: w.link_ml },
+      { key: 'shopee',       label: 'Shopee',         cls: 'btn-shopee', link: w.link_shopee },
+      { key: 'amazon',       label: 'Amazon',         cls: 'btn-amazon', link: w.link_amazon },
+    ];
+
+    plataformas.forEach(p => {
+      if (!p.link) return;
+      const isBest = w.melhor_plataforma === p.key;
+      const badge  = isBest ? '<span class="badge-best">+ barato</span>' : '';
+      botoes += `
+        <a href="${p.link}" target="_blank" rel="noopener sponsored"
+           class="btn-store ${p.cls} ${isBest ? 'best' : ''}">
+          ${badge} ${p.label}
+        </a>`;
+    });
+
+    // Info da dose adaptada à meta
+    const dosesLabel = w.dosesNecessarias.toFixed(1) === '1.0'
+      ? '1 dose'
+      : `${w.dosesNecessarias.toFixed(1)} doses`;
+
+    container.innerHTML += `
+      <div class="card" style="animation-delay: ${i * 0.05}s">
+        <div class="card-pos ${clase}">${pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos}</div>
+
+        <div class="card-info">
+          <div class="card-name">${w.nome} · ${w.marca}</div>
+          <div class="card-brand">${w.peso_g}g · ${w.prot_por_dose}g prot/${w.dose_g}g dose</div>
+          <div class="card-pills">
+            <span class="pill highlight">${perc}% proteína</span>
+            <span class="pill">${vlrKg}</span>
+            <span class="pill">${w.num_doses} doses no pote</span>
+          </div>
+        </div>
+
+        <div class="card-right">
+          <div>
+            <div class="card-price">R$${parseFloat(w.preco_atual).toFixed(2)}</div>
+            <div class="card-price-sub">preço do pote</div>
+          </div>
+          <div class="card-dose-info">
+            Para ${metaProt}g de prot: ${w.gPoNecessario}g de pó (${dosesLabel})<br>
+            <strong>Custa R$${w.custoParaMeta.toFixed(2)}</strong>
+          </div>
+          <div class="btn-group">
+            ${botoes || '<span style="font-size:11px;color:var(--muted)">Links em breve</span>'}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// ─── Slider de meta proteica ───────────────────────────────────
+function atualizarMeta(valor) {
+  metaProt = parseInt(valor);
+  document.getElementById('meta-valor').textContent = metaProt;
+  if (wheys.length > 0) renderizar();
+}
+
+// ─── Inicializa ────────────────────────────────────────────────
+carregarDados();
+</script>
+</body>
+</html>
