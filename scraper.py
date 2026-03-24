@@ -1,10 +1,9 @@
 """
-WHEYRANK — Scraper v2.1
+WHEYRANK — Scraper v2
 ======================
-- Corrige erro 403 da API do ML (headers obrigatórios)
+- Usa a API oficial do ML com o ml_item_id de cada whey
 - Trata status: active/paused/closed
-- Trata available_quantity
-- Usa permalink correto do produto
+- Trata available_quantity (sem estoque = marca indisponível)
 - Roda no Railway a cada 6h via Cron: 0 */6 * * *
 """
 
@@ -26,6 +25,7 @@ HEADERS_SUPA = {
 # ─── Supabase ─────────────────────────────────────────────────
 
 def buscar_wheys():
+    """Retorna todos os wheys ativos com ml_item_id."""
     resp = requests.get(
         f"{SUPABASE_URL}/rest/v1/wheys",
         headers=HEADERS_SUPA,
@@ -36,6 +36,7 @@ def buscar_wheys():
 
 
 def salvar_preco(whey_id, preco, url_produto):
+    """Insere novo registro de preço."""
     resp = requests.post(
         f"{SUPABASE_URL}/rest/v1/precos",
         headers=HEADERS_SUPA,
@@ -51,6 +52,7 @@ def salvar_preco(whey_id, preco, url_produto):
 
 
 def marcar_disponibilidade(whey_id, disponivel: bool):
+    """Atualiza o campo disponivel no whey."""
     requests.patch(
         f"{SUPABASE_URL}/rest/v1/wheys",
         headers=HEADERS_SUPA,
@@ -62,21 +64,21 @@ def marcar_disponibilidade(whey_id, disponivel: bool):
 # ─── API Mercado Livre ─────────────────────────────────────────
 
 def buscar_preco_ml(mlb_id: str):
+    """
+    Chama a API do ML e retorna (preco, disponivel, motivo).
+    
+    Retornos possíveis:
+      (129.90, True,  "ok")
+      (None,   False, "sem_estoque")
+      (None,   False, "pausado")
+      (None,   False, "erro_api")
+    """
     try:
         url = f"https://api.mercadolibre.com/items/{mlb_id}"
-
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json"
-        }
-
-        resp = requests.get(url, headers=headers, timeout=15)
+        resp = requests.get(url, timeout=15)
 
         if resp.status_code == 404:
             return None, False, "nao_encontrado"
-
-        if resp.status_code == 403:
-            return None, False, "bloqueado_403"
 
         resp.raise_for_status()
         dados = resp.json()
@@ -84,9 +86,8 @@ def buscar_preco_ml(mlb_id: str):
         status = dados.get("status", "")
         qty    = dados.get("available_quantity", 0)
         preco  = dados.get("price")
-        link   = dados.get("permalink")
 
-        # Status inválido
+        # Anúncio pausado ou fechado
         if status in ("paused", "closed", "inactive"):
             return None, False, f"status_{status}"
 
@@ -94,18 +95,16 @@ def buscar_preco_ml(mlb_id: str):
         if qty == 0:
             return None, False, "sem_estoque"
 
-        # Preço válido
+        # Tudo ok
         if preco and preco > 0:
-            if not link:
-                link = f"https://produto.mercadolivre.com.br/{mlb_id}"
-            return float(preco), True, "ok", link
+            return float(preco), True, "ok"
 
-        return None, False, "preco_invalido", None
+        return None, False, "preco_invalido"
 
     except requests.exceptions.Timeout:
-        return None, False, "timeout", None
+        return None, False, "timeout"
     except Exception as e:
-        return None, False, f"erro: {e}", None
+        return None, False, f"erro: {e}"
 
 
 # ─── Loop principal ────────────────────────────────────────────
@@ -128,14 +127,12 @@ def main():
 
         print(f"🔍 {label} ({mlb_id})")
 
-        preco, disponivel, motivo, link = buscar_preco_ml(mlb_id)
+        preco, disponivel, motivo = buscar_preco_ml(mlb_id)
 
-        if motivo == "bloqueado_403":
-            print("  ❌ Bloqueado pela API (403) — provável limitação do ML")
-            erros += 1
-
-        elif disponivel and preco:
-            ok = salvar_preco(whey_id, preco, link)
+        if disponivel and preco:
+            # Salva o preço
+            url_produto = f"https://www.mercadolivre.com.br/p/{mlb_id}"
+            ok = salvar_preco(whey_id, preco, url_produto)
             marcar_disponibilidade(whey_id, True)
 
             if ok:
@@ -147,19 +144,19 @@ def main():
 
         elif motivo == "sem_estoque":
             marcar_disponibilidade(whey_id, False)
-            print("  ⚠️  Sem estoque — removido do ranking")
+            print(f"  ⚠️  Sem estoque — removido do ranking temporariamente")
             sem_estoque += 1
 
         elif motivo.startswith("status_"):
             marcar_disponibilidade(whey_id, False)
-            print(f"  ⚠️  Anúncio {motivo.replace('status_','')} — removido")
+            print(f"  ⚠️  Anúncio {motivo.replace('status_','')} — removido do ranking")
             sem_estoque += 1
 
         else:
             print(f"  ❌ Falha: {motivo}")
             erros += 1
 
-        time.sleep(1)
+        time.sleep(1)  # Respeita o rate limit da API do ML
 
     print("\n" + "=" * 52)
     print(f"✅ Atualizados: {sucessos}  |  ⚠️  Sem estoque: {sem_estoque}  |  ❌ Erros: {erros}")
