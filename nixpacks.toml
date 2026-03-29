@@ -3,10 +3,12 @@ nixPkgs = ["python311Full"]
 
 [phases.install]
 cmds = [
-  "python3 -m pip install --upgrade pip",
-  "python3 -m pip install playwright requests",
-  "python3 -m playwright install chromium --with-deps"
+  "python3 -m ensurepip --upgrade || true",
+  "python3 -m venv /opt/venv",
+  "/opt/venv/bin/pip install --upgrade pip",
+  "/opt/venv/bin/pip install playwright requests",
+  "/opt/venv/bin/playwright install chromium --with-deps"
 ]
 
 [start]
-cmd = "python3 scraper.py"
+cmd = "/opt/venv/bin/python scraper.py"
