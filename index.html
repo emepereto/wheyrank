@@ -64,10 +64,10 @@ header { background: var(--bg2); border-bottom: 1px solid var(--border); padding
 .card-price { font-family: var(--font-display); font-size: 20px; color: var(--muted); line-height: 1; }
 .card-price-sub { font-size: 11px; color: var(--muted); margin-top: 1px; opacity: 0.6; }
 /* Campo correção de preço */
-.preco-corrigir { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
-.preco-corrigir label { font-size: 10px; color: var(--muted); white-space: nowrap; cursor: pointer; }
-.preco-input { width: 75px; padding: 3px 7px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 12px; font-family: var(--font-body); text-align: right; transition: border-color .2s; }
-.preco-input:focus { outline: none; border-color: var(--accent); }
+.preco-corrigir { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 6px 10px; background: var(--bg3); border: 1px dashed var(--border); border-radius: var(--r-sm); }
+.preco-corrigir label { font-size: 12px; color: var(--muted); white-space: nowrap; cursor: pointer; }
+.preco-input { width: 90px; padding: 5px 9px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 14px; font-family: var(--font-body); text-align: right; transition: border-color .2s; }
+.preco-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(200,241,53,0.15); }
 .preco-input::placeholder { color: var(--muted); opacity: 0.5; }
 /* Bloco custo */
 .card-meta-block { background: var(--bg3); border: 1px solid #3a3d28; border-radius: var(--r-sm); padding: 10px 14px; text-align: right; min-width: 160px; }
@@ -227,7 +227,7 @@ function renderizar() {
                 placeholder="corrigir"
                 value="${valorCorrigido}"
                 step="0.01" min="1"
-                oninput="corrigirPreco(${w.id}, this.value)"
+                onchange="corrigirPreco(${w.id}, this.value)"
               />
             </div>
           </div>
