@@ -1,5 +1,8 @@
 [phases.setup]
 nixPkgs = ["python311", "python311Packages.requests"]
- 
+
+[phases.install]
+cmds = ["pip install playwright requests --break-system-packages", "playwright install chromium --with-deps"]
+
 [start]
 cmd = "python3 scraper.py"
