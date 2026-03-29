@@ -1,1 +1,1 @@
-worker: python3 debug_scraper.py
+worker: python3 scraper.py
