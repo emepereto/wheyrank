@@ -145,22 +145,13 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         if not resultados:
             return None, None, False, "sem_resultados"
  
-        # Filtra só loja oficial
-        lojas_oficiais = [r for r in resultados if r.get("official_store_id")]
- 
-        if lojas_oficiais:
-            # Pega a loja oficial com menor preço
-            item = min(lojas_oficiais, key=lambda x: x["price"])
-            fonte = "loja_oficial"
-        else:
-            # Se não tiver loja oficial, pega o menor preço geral
-            item = min(resultados, key=lambda x: x["price"])
-            fonte = "menor_preco"
- 
+        # Sempre pega o menor preço entre todos os vendedores
+        # Assim o preço no site bate com o que o ML mostra ao clicar
+        item    = min(resultados, key=lambda x: x["price"])
         preco   = float(item["price"])
         item_id = item["item_id"]
  
-        print(f"    [{fonte}] {item_id} → R${preco:.2f}")
+        print(f"    [menor_preco] {item_id} → R${preco:.2f}")
         return preco, item_id, True, "ok"
  
     except requests.exceptions.Timeout:
@@ -206,7 +197,8 @@ def main():
                 break
  
         if disponivel and preco:
-            url_produto = f"https://www.mercadolivre.com.br/p/{mlb_id}?pdp_filters=item_id%3A{item_id}"
+            # Usa link de afiliado da tabela wheys (cadastrado manualmente)
+            url_produto = f"https://www.mercadolivre.com.br/p/{mlb_id}"
             ok = salvar_preco(whey_id, preco, url_produto)
             marcar_disponibilidade(whey_id, True)
             if ok:
@@ -234,9 +226,3 @@ def main():
  
 if __name__ == "__main__":
     main()
- 
-
-
-
-
-
