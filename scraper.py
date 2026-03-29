@@ -1,9 +1,11 @@
 """
-WHEYRANK — Scraper v6
+WHEYRANK — Scraper v7
 ======================
-- Usa /products/{id} para pegar o preco exato que o ML exibe na pagina
-- Renova o access_token automaticamente com o refresh_token
-- Roda no Railway a cada 6h via Cron: 0 */6 * * *
+- Busca todos os vendedores via /products/{id}/items
+- Para cada anuncio, busca o preco exato via /items/{id}/sale_price
+- Pega o menor preco real entre todos os vendedores
+- Renova token automaticamente
+- Roda no Railway a cada 6h: 0 */6 * * *
 """
 
 import os
@@ -74,7 +76,7 @@ def renovar_token(refresh_token):
         novo_access  = dados.get("access_token")
         novo_refresh = dados.get("refresh_token", refresh_token)
         salvar_tokens(novo_access, novo_refresh)
-        print("  Token renovado com sucesso")
+        print("  Token renovado")
         return novo_access, novo_refresh
     print(f"  Erro ao renovar: {resp.text}")
     return None, None
@@ -118,43 +120,53 @@ def marcar_disponibilidade(whey_id, disponivel):
 
 # --- API ML ---
 
+def buscar_preco_real(item_id, headers_ml):
+    """
+    Busca o preco exato de venda de um anuncio especifico.
+    Endpoint: /items/{id}/sale_price?context=channel_marketplace
+    Retorna o preco que o ML efetivamente cobra do comprador.
+    """
+    try:
+        resp = requests.get(
+            f"https://api.mercadolibre.com/items/{item_id}/sale_price",
+            headers=headers_ml,
+            params={"context": "channel_marketplace"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            dados = resp.json()
+            preco = dados.get("amount")
+            if preco and float(preco) > 0:
+                return float(preco)
+    except Exception:
+        pass
+
+    # Fallback: preco direto do item
+    try:
+        resp = requests.get(
+            f"https://api.mercadolibre.com/items/{item_id}",
+            headers=headers_ml,
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            preco = resp.json().get("price")
+            if preco and float(preco) > 0:
+                return float(preco)
+    except Exception:
+        pass
+
+    return None
+
+
 def buscar_preco_ml(mlb_produto_id, access_token):
     """
-    Tenta 3 estrategias em ordem para pegar o preco mais preciso:
-    1. /products/{id} — preco destacado pelo ML na pagina do produto
-    2. /products/{id}/items ordenado por preco — menor preco disponivel
-    3. Fallback: primeiro resultado disponivel
+    1. Lista todos os vendedores via /products/{id}/items
+    2. Para cada um busca o preco real via /items/{id}/sale_price
+    3. Retorna o menor preco real encontrado
     """
     headers_ml = {"Authorization": f"Bearer {access_token}"}
 
-    # Estrategia 1: endpoint de produto direto
-    try:
-        resp = requests.get(
-            f"https://api.mercadolibre.com/products/{mlb_produto_id}",
-            headers=headers_ml,
-            timeout=15,
-        )
-
-        if resp.status_code == 401:
-            return None, False, "token_expirado"
-
-        if resp.status_code == 200:
-            dados = resp.json()
-            # buy_box_winner e o preco que o ML destaca na pagina
-            buy_box = dados.get("buy_box_winner", {})
-            preco = buy_box.get("price") if buy_box else None
-
-            if not preco:
-                preco = dados.get("price")
-
-            if preco and float(preco) > 0:
-                print(f"    [produto] preco destacado ML: R${float(preco):.2f}")
-                return float(preco), True, "ok"
-
-    except Exception as e:
-        print(f"    estrategia 1 falhou: {e}")
-
-    # Estrategia 2: lista todos os itens e pega o menor
+    # Busca todos os anuncios do produto
     try:
         resp = requests.get(
             f"https://api.mercadolibre.com/products/{mlb_produto_id}/items",
@@ -165,34 +177,55 @@ def buscar_preco_ml(mlb_produto_id, access_token):
 
         if resp.status_code == 401:
             return None, False, "token_expirado"
+        if resp.status_code != 200:
+            return None, False, f"erro_{resp.status_code}"
 
-        if resp.status_code == 200:
-            resultados = resp.json().get("results", [])
-            if resultados:
-                item  = min(resultados, key=lambda x: x["price"])
-                preco = float(item["price"])
-                print(f"    [items] menor preco: R${preco:.2f} ({item['item_id']})")
-                return preco, True, "ok"
+        resultados = resp.json().get("results", [])
+        if not resultados:
+            return None, False, "sem_resultados"
 
     except Exception as e:
-        print(f"    estrategia 2 falhou: {e}")
+        return None, False, f"erro: {e}"
 
-    return None, False, "sem_resultados"
+    # Busca o preco real de cada anuncio e pega o menor
+    menor_preco = None
+    menor_item  = None
+
+    for item in resultados:
+        item_id = item["item_id"]
+        preco_real = buscar_preco_real(item_id, headers_ml)
+
+        if preco_real:
+            if menor_preco is None or preco_real < menor_preco:
+                menor_preco = preco_real
+                menor_item  = item_id
+
+        time.sleep(0.1)  # Evita rate limit
+
+    if menor_preco:
+        print(f"    menor preco real: R${menor_preco:.2f} ({menor_item})")
+        return menor_preco, True, "ok"
+
+    # Fallback: preco da API sem sale_price
+    item  = min(resultados, key=lambda x: x["price"])
+    preco = float(item["price"])
+    print(f"    fallback preco API: R${preco:.2f} ({item['item_id']})")
+    return preco, True, "ok"
 
 
 # --- Loop principal ---
 
 def main():
-    print(f"\n Iniciando coleta: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    print(f"\nIniciando coleta: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
     print("=" * 52)
 
     access_token, refresh_token = carregar_tokens()
     if not access_token:
-        print("Tokens nao encontrados no banco.")
+        print("Tokens nao encontrados.")
         return
 
     wheys = buscar_wheys()
-    print(f"Produtos para verificar: {len(wheys)}\n")
+    print(f"Produtos: {len(wheys)}\n")
 
     sucessos = sem_estoque = erros = 0
     token_renovado = False
@@ -206,7 +239,6 @@ def main():
 
         preco, disponivel, motivo = buscar_preco_ml(mlb_id, access_token)
 
-        # Token expirou — renova e tenta de novo
         if motivo == "token_expirado" and not token_renovado:
             access_token, refresh_token = renovar_token(refresh_token)
             token_renovado = True
@@ -220,16 +252,15 @@ def main():
             url_produto = f"https://www.mercadolivre.com.br/p/{mlb_id}"
             ok = salvar_preco(whey_id, preco, url_produto)
             marcar_disponibilidade(whey_id, True)
+            print(f"  {'OK' if ok else 'ERRO SUPABASE'} R${preco:.2f}")
             if ok:
-                print(f"  OK R${preco:.2f} salvo")
                 sucessos += 1
             else:
-                print(f"  Erro ao salvar no Supabase")
                 erros += 1
 
         elif motivo == "sem_resultados":
             marcar_disponibilidade(whey_id, False)
-            print(f"  Sem resultados — removido do ranking")
+            print(f"  Sem resultados")
             sem_estoque += 1
 
         else:
