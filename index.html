@@ -3,375 +3,88 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- SEO -->
 <title>Comparador de Whey Protein — Melhor Custo Benefício em 2025</title>
 <meta name="description" content="Compare o custo benefício real dos melhores wheys protein do Brasil. Calcule o valor por grama de proteína e ache onde comprar mais barato.">
 <meta name="keywords" content="whey protein melhor custo beneficio, comparador whey, whey protein barato, proteina por real">
 <link rel="canonical" href="https://seusite.com.br/">
-
 <meta property="og:title" content="Comparador de Whey Protein — Custo Benefício Real">
 <meta property="og:description" content="Descubra qual whey entrega mais proteína por real investido.">
 <meta property="og:type" content="website">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
-  --bg:       #0e0f11;
-  --bg2:      #18191d;
-  --bg3:      #222328;
-  --border:   #2e2f35;
-  --text:     #e8e9ec;
-  --muted:    #7a7c84;
-  --accent:   #c8f135;
-  --accent2:  #3bdfb0;
-  --danger:   #ff5c5c;
-  --gold:     #ffc947;
-  --ml:       #ffe600;
-  --r:        12px;
-  --r-sm:     8px;
+  --bg: #0e0f11; --bg2: #18191d; --bg3: #222328;
+  --border: #2e2f35; --text: #e8e9ec; --muted: #7a7c84;
+  --accent: #c8f135; --accent2: #3bdfb0; --danger: #ff5c5c;
+  --gold: #ffc947; --ml: #ffe600;
+  --r: 12px; --r-sm: 8px;
   --font-display: 'Bebas Neue', sans-serif;
-  --font-body:    'DM Sans', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
 }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.6;
-  min-height: 100vh;
-}
-
-header {
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  height: 60px;
-}
-
-.logo {
-  font-family: var(--font-display);
-  font-size: 22px;
-  letter-spacing: 1px;
-  color: var(--accent);
-  text-decoration: none;
-}
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.6; min-height: 100vh; }
+header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 16px; height: 60px; }
+.logo { font-family: var(--font-display); font-size: 22px; letter-spacing: 1px; color: var(--accent); text-decoration: none; }
 .logo span { color: var(--text); }
-
-.last-update {
-  margin-left: auto;
-  font-size: 12px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dot {
-  width: 7px; height: 7px;
-  background: var(--accent);
-  border-radius: 50%;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.7); }
-}
-
-.hero {
-  padding: 48px 24px 32px;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.hero h1 {
-  font-family: var(--font-display);
-  font-size: clamp(36px, 6vw, 64px);
-  line-height: 1;
-  letter-spacing: 1px;
-  margin-bottom: 12px;
-}
-
+.last-update { margin-left: auto; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
+.hero { padding: 48px 24px 32px; max-width: 900px; margin: 0 auto; }
+.hero h1 { font-family: var(--font-display); font-size: clamp(36px, 6vw, 64px); line-height: 1; letter-spacing: 1px; margin-bottom: 12px; }
 .hero h1 em { font-style: normal; color: var(--accent); }
-
-.hero p {
-  color: var(--muted);
-  font-size: 15px;
-  max-width: 520px;
-  margin-bottom: 28px;
-}
-
-.calculator {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 20px 24px;
-  max-width: 900px;
-  margin: 0 auto 32px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-}
-
-.calc-label {
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-}
-
-.calc-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 200px;
-}
-
-.calc-input-wrap input[type="range"] {
-  flex: 1;
-  accent-color: var(--accent);
-  height: 4px;
-}
-
-.calc-value {
-  font-family: var(--font-display);
-  font-size: 28px;
-  color: var(--accent);
-  min-width: 80px;
-  text-align: right;
-}
-
-.calc-hint {
-  font-size: 12px;
-  color: var(--muted);
-  width: 100%;
-}
-
-.section {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 24px 60px;
-}
-
-.section-title {
-  font-family: var(--font-display);
-  font-size: 20px;
-  letter-spacing: 1px;
-  color: var(--muted);
-  margin-bottom: 16px;
-}
-
+.hero p { color: var(--muted); font-size: 15px; max-width: 520px; margin-bottom: 28px; }
+.calculator { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 20px 24px; max-width: 900px; margin: 0 auto 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.calc-label { font-size: 13px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
+.calc-input-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
+.calc-input-wrap input[type="range"] { flex: 1; accent-color: var(--accent); height: 4px; }
+.calc-value { font-family: var(--font-display); font-size: 28px; color: var(--accent); min-width: 80px; text-align: right; }
+.calc-hint { font-size: 12px; color: var(--muted); width: 100%; }
+.section { max-width: 900px; margin: 0 auto; padding: 0 24px 60px; }
+.section-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; color: var(--muted); margin-bottom: 16px; }
 .skeleton-wrap { display: flex; flex-direction: column; gap: 10px; }
-
-.skeleton-card {
-  background: var(--bg2);
-  border-radius: var(--r);
-  height: 88px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  position: relative;
-}
-
-.skeleton-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
-  animation: shimmer 1.4s infinite;
-}
-
-@keyframes shimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
+.skeleton-card { background: var(--bg2); border-radius: var(--r); height: 88px; border: 1px solid var(--border); overflow: hidden; position: relative; }
+.skeleton-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%); animation: shimmer 1.4s infinite; }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 #ranking-list { display: flex; flex-direction: column; gap: 10px; }
-
-.card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 16px 20px;
-  display: grid;
-  grid-template-columns: 44px 1fr auto;
-  gap: 16px;
-  align-items: center;
-  transition: border-color .2s, transform .15s;
-  animation: fadeUp .4s ease both;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 20px; display: grid; grid-template-columns: 44px 1fr auto; gap: 16px; align-items: center; transition: border-color .2s, transform .15s; animation: fadeUp .4s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .card:hover { border-color: #3e3f47; transform: translateY(-1px); }
-
-.card-pos {
-  font-family: var(--font-display);
-  font-size: 28px;
-  text-align: center;
-  line-height: 1;
-}
-
+.card-pos { font-family: var(--font-display); font-size: 28px; text-align: center; line-height: 1; }
 .card-pos.pos-1 { color: var(--accent); }
 .card-pos.pos-2 { color: var(--accent2); }
 .card-pos.pos-3 { color: var(--gold); }
 .card-pos.pos-other { color: var(--muted); }
-
-.card-name {
-  font-weight: 600;
-  font-size: 15px;
-  color: var(--text);
-  margin-bottom: 2px;
-}
-
-.card-brand {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-
+.card-name { font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 2px; }
+.card-brand { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 .card-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.pill {
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 20px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  white-space: nowrap;
-}
-
+.pill { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; background: var(--bg3); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
 .pill.highlight { border-color: var(--accent); color: var(--accent); }
-
-/* ─── Lado direito ─── */
-.card-right {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.card-price {
-  font-family: var(--font-display);
-  font-size: 20px;
-  color: var(--muted);
-  line-height: 1;
-}
-
-.card-price-sub {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 1px;
-  opacity: 0.6;
-}
-
-/* ─── Bloco de custo — destaque principal ─── */
-.card-meta-block {
-  background: var(--bg3);
-  border: 1px solid #3a3d28;
-  border-radius: var(--r-sm);
-  padding: 10px 14px;
-  text-align: right;
-  min-width: 160px;
-}
-
-.card-meta-label {
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .6px;
-  margin-bottom: 2px;
-}
-
-.card-meta-detail {
-  font-size: 11px;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
-.card-meta-custo {
-  font-family: var(--font-display);
-  font-size: 36px;
-  color: var(--accent);
-  line-height: 1;
-  letter-spacing: 0.5px;
-}
-
-.card-meta-custo-sub {
-  font-size: 10px;
-  color: var(--accent);
-  opacity: 0.65;
-  margin-top: 3px;
-  text-transform: uppercase;
-  letter-spacing: .4px;
-}
-
-/* ─── Botão ML ─── */
-.btn-ml {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 6px;
-  text-decoration: none;
-  background: var(--ml);
-  color: #111;
-  transition: opacity .15s, transform .1s;
-  white-space: nowrap;
-  letter-spacing: .2px;
-}
-
+.card-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.card-price { font-family: var(--font-display); font-size: 20px; color: var(--muted); line-height: 1; }
+.card-price-sub { font-size: 11px; color: var(--muted); margin-top: 1px; opacity: 0.6; }
+/* Campo correção de preço */
+.preco-corrigir { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.preco-corrigir label { font-size: 10px; color: var(--muted); white-space: nowrap; cursor: pointer; }
+.preco-input { width: 75px; padding: 3px 7px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 12px; font-family: var(--font-body); text-align: right; transition: border-color .2s; }
+.preco-input:focus { outline: none; border-color: var(--accent); }
+.preco-input::placeholder { color: var(--muted); opacity: 0.5; }
+/* Bloco custo */
+.card-meta-block { background: var(--bg3); border: 1px solid #3a3d28; border-radius: var(--r-sm); padding: 10px 14px; text-align: right; min-width: 160px; }
+.card-meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 2px; }
+.card-meta-detail { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.card-meta-custo { font-family: var(--font-display); font-size: 36px; color: var(--accent); line-height: 1; letter-spacing: 0.5px; }
+.card-meta-custo-sub { font-size: 10px; color: var(--accent); opacity: 0.65; margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; }
+.btn-ml { display: inline-block; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 6px; text-decoration: none; background: var(--ml); color: #111; transition: opacity .15s, transform .1s; white-space: nowrap; }
 .btn-ml:hover { opacity: .85; transform: scale(1.02); }
-
-.btn-ml-soon {
-  font-size: 11px;
-  color: var(--muted);
-  font-style: italic;
-}
-
+.btn-ml-soon { font-size: 11px; color: var(--muted); font-style: italic; }
 .error-msg { text-align: center; padding: 40px; color: var(--muted); }
 .error-msg strong { color: var(--danger); display: block; margin-bottom: 8px; }
-
-footer {
-  border-top: 1px solid var(--border);
-  padding: 24px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.8;
-}
+footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.8; }
 footer a { color: var(--muted); }
-
 @media (max-width: 600px) {
-  .card {
-    grid-template-columns: 36px 1fr;
-    grid-template-rows: auto auto;
-  }
-  .card-right {
-    grid-column: 2;
-    align-items: flex-start;
-    text-align: left;
-  }
+  .card { grid-template-columns: 36px 1fr; grid-template-rows: auto auto; }
+  .card-right { grid-column: 2; align-items: flex-start; text-align: left; }
   .card-meta-block { text-align: left; min-width: unset; }
   .card-meta-custo { font-size: 28px; }
 }
@@ -388,15 +101,14 @@ footer a { color: var(--muted); }
 </header>
 
 <section class="hero">
-  <h1>Qual whey tem mais<br><em>proteína por real?</em></h1>
-  <p>Comparamos o custo real por grama de proteína na dose — não só o preço do pote. Atualizado automaticamente.</p>
+  <h1>Qual whey dá mais<br><em>proteína por real?</em></h1>
+  <p>Comparamos o custo real por grama de proteína — não só o preço do pote. Atualizado automaticamente.</p>
 </section>
 
 <div class="calculator">
   <div class="calc-label">Meta de proteína por dose</div>
   <div class="calc-input-wrap">
-    <input type="range" id="meta-prot" min="15" max="50" value="24" step="1"
-           oninput="atualizarMeta(this.value)">
+    <input type="range" id="meta-prot" min="15" max="50" value="24" step="1" oninput="atualizarMeta(this.value)">
     <div class="calc-value"><span id="meta-valor">24</span>g</div>
   </div>
   <div class="calc-hint">
@@ -406,7 +118,6 @@ footer a { color: var(--muted); }
 
 <section class="section">
   <div class="section-title">RANKING — melhor custo por proteína</div>
-
   <div class="skeleton-wrap" id="skeleton">
     <div class="skeleton-card"></div>
     <div class="skeleton-card"></div>
@@ -414,7 +125,6 @@ footer a { color: var(--muted); }
     <div class="skeleton-card"></div>
     <div class="skeleton-card"></div>
   </div>
-
   <div id="ranking-list" style="display:none"></div>
 </section>
 
@@ -430,17 +140,13 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 let wheys = [];
 let metaProt = 24;
+const precosCorrigidos = {};
 
 async function carregarDados() {
   try {
     const resp = await fetch(
       `${SUPABASE_URL}/rest/v1/ranking_wheys?select=*`,
-      {
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-        }
-      }
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
     );
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     wheys = await resp.json();
@@ -463,13 +169,17 @@ function calcularParaMeta(whey, metaG) {
   const proporcaoProt    = whey.prot_por_dose / whey.dose_g;
   const gPoNecessario    = metaG / proporcaoProt;
   const dosesNecessarias = gPoNecessario / whey.dose_g;
-  const custoPorDose     = whey.preco_atual / whey.num_doses;
+  const preco            = precosCorrigidos[whey.id] || parseFloat(whey.preco_atual);
+  const custoPorDose     = preco / whey.num_doses;
   const custoParaMeta    = custoPorDose * dosesNecessarias;
-  return {
-    gPoNecessario: Math.round(gPoNecessario),
-    dosesNecessarias,
-    custoParaMeta,
-  };
+  return { gPoNecessario: Math.round(gPoNecessario), dosesNecessarias, custoParaMeta, preco };
+}
+
+function corrigirPreco(wheyId, valor) {
+  const v = parseFloat(String(valor).replace(',', '.'));
+  if (v > 0) precosCorrigidos[wheyId] = v;
+  else delete precosCorrigidos[wheyId];
+  if (wheys.length > 0) renderizar();
 }
 
 function renderizar() {
@@ -487,31 +197,39 @@ function renderizar() {
     const perc       = Math.round((w.prot_por_dose / w.dose_g) * 100);
     const vlrKg      = w.vlr_por_kg_prot ? `R$${parseFloat(w.vlr_por_kg_prot).toFixed(2)}/kg prot` : '';
     const dosesLabel = w.dosesNecessarias.toFixed(1) === '1.0' ? '1 dose' : `${w.dosesNecessarias.toFixed(1)} doses`;
-
-    const btnML = w.link_ml
+    const btnML      = w.link_ml
       ? `<a href="${w.link_ml}" target="_blank" rel="noopener sponsored" class="btn-ml">Comprar no Mercado Livre →</a>`
       : `<span class="btn-ml-soon">Link em breve</span>`;
+    const valorCorrigido = precosCorrigidos[w.id] ? precosCorrigidos[w.id].toFixed(2) : '';
 
     container.innerHTML += `
       <div class="card" style="animation-delay:${i * 0.05}s">
-
         <div class="card-pos ${clase}">${emoji}</div>
-
         <div class="card-info">
-          <div class="card-name">${w.nome} · ${w.marca}</div>
+          <div class="card-name">${w.nome} · ${w.marca} · ${w.sabor || ''}</div>
           <div class="card-brand">${w.peso_g}g · ${w.prot_por_dose}g prot/${w.dose_g}g dose</div>
           <div class="card-pills">
             <span class="pill highlight">${perc}% proteína</span>
             <span class="pill">${vlrKg}</span>
             <span class="pill">${w.num_doses} doses no pote</span>
-            ${w.sabor ? `<span class="pill">${w.sabor}</span>` : ''}
           </div>
         </div>
-
         <div class="card-right">
           <div>
-            <div class="card-price">R$${parseFloat(w.preco_atual).toFixed(2)}</div>
+            <div class="card-price">R$${w.preco.toFixed(2)}</div>
             <div class="card-price-sub">preço do pote</div>
+            <div class="preco-corrigir">
+              <label for="preco-${w.id}">preço diferente?</label>
+              <input
+                id="preco-${w.id}"
+                type="number"
+                class="preco-input"
+                placeholder="corrigir"
+                value="${valorCorrigido}"
+                step="0.01" min="1"
+                oninput="corrigirPreco(${w.id}, this.value)"
+              />
+            </div>
           </div>
           <div class="card-meta-block">
             <div class="card-meta-label">Para ${metaProt}g de proteína</div>
@@ -521,7 +239,6 @@ function renderizar() {
           </div>
           <div>${btnML}</div>
         </div>
-
       </div>
     `;
   });
