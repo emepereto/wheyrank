@@ -1,10 +1,11 @@
 """
-WHEYRANK — Scraper v7
-======================
-- Usa /products/{id}/items para listar vendedores
-- Pega o menor preco entre todos
+WHEYRANK — Scraper v8 (com ranking inteligente estilo ML)
+=========================================================
+- Usa /products/{id}/items
+- Filtra vendedores ruins
+- Usa score (reputação + vendas + frete + preço)
+- Evita preços absurdos
 - Renova token automaticamente
-- Roda no Railway a cada 6h: 0 */6 * * *
 """
 
 import os
@@ -90,7 +91,6 @@ def buscar_wheys():
 
 
 def salvar_preco(whey_id, preco, url_produto):
-    # Apaga registro anterior desse whey para manter só o mais recente
     requests.delete(
         f"{SUPABASE_URL}/rest/v1/precos",
         headers=HEADERS_SUPA,
@@ -119,6 +119,48 @@ def marcar_disponibilidade(whey_id, disponivel):
     )
 
 
+# 🧠 SCORE estilo Mercado Livre
+def calcular_score(item):
+    seller = item.get("seller", {})
+    rep = seller.get("reputation", {})
+
+    price = item.get("price", 0)
+    level = rep.get("level_id", "")
+    vendas = rep.get("transactions", {}).get("total", 0)
+    shipping = item.get("shipping", {})
+
+    score = 0
+
+    # 🟢 reputação
+    if level == "5_green":
+        score += 50
+    elif level == "4_light_green":
+        score += 30
+    else:
+        score -= 100
+
+    # 📦 vendas
+    if vendas > 1000:
+        score += 30
+    elif vendas > 100:
+        score += 20
+    elif vendas > 50:
+        score += 10
+
+    # 🚚 FULL (muito importante)
+    if shipping.get("logistic_type") == "fulfillment":
+        score += 40
+
+    # 🚚 frete grátis
+    if shipping.get("free_shipping"):
+        score += 10
+
+    # 💰 preço (menor = melhor, mas não domina tudo)
+    score += max(0, 2000 - price) / 100
+
+    return score
+
+
 def buscar_preco_ml(mlb_produto_id, access_token):
     try:
         resp = requests.get(
@@ -127,18 +169,58 @@ def buscar_preco_ml(mlb_produto_id, access_token):
             params={"limit": 100},
             timeout=15,
         )
+
         if resp.status_code == 401:
             return None, False, "token_expirado"
+
         if resp.status_code != 200:
             return None, False, f"erro_{resp.status_code}"
 
         resultados = resp.json().get("results", [])
+
         if not resultados:
             return None, False, "sem_resultados"
 
-        item  = min(resultados, key=lambda x: x["price"])
+        validos = []
+
+        for i in resultados:
+            if not i.get("price"):
+                continue
+
+            if i.get("condition") != "new":
+                continue
+
+            if i.get("available_quantity", 0) <= 0:
+                continue
+
+            seller = i.get("seller", {})
+            rep = seller.get("reputation", {})
+
+            level = rep.get("level_id")
+            vendas = rep.get("transactions", {}).get("total", 0)
+
+            # 🔴 FILTROS BASE (igual afiliado)
+            if level not in ["4_light_green", "5_green"]:
+                continue
+
+            if vendas < 10:
+                continue
+
+            # 💥 evita preços absurdos
+            if i["price"] < 120:
+                continue
+
+            validos.append(i)
+
+        if not validos:
+            return None, False, "sem_validos"
+
+        # 🧠 escolhe melhor oferta (não a mais barata)
+        item = max(validos, key=calcular_score)
+
         preco = float(item["price"])
-        print(f"    menor preco: R${preco:.2f} ({item['item_id']})")
+        print(f"    melhor oferta: R${preco:.2f} ({item['item_id']})")
+
         return preco, True, "ok"
 
     except Exception as e:
@@ -150,11 +232,11 @@ def main():
     print("=" * 52)
 
     access_token, refresh_token = carregar_tokens()
+
     if not access_token:
         print("Tokens nao encontrados.")
         return
 
-    # Renova sempre antes de começar
     if refresh_token:
         novo, novo_r = renovar_token(refresh_token)
         if novo:
@@ -170,6 +252,7 @@ def main():
         whey_id = w["id"]
         mlb_id  = w["ml_item_id"]
         label   = f"{w['marca']} {w['nome']} {w.get('sabor', '')}"
+
         print(f">> {label} ({mlb_id})")
 
         preco, disponivel, motivo = buscar_preco_ml(mlb_id, access_token)
@@ -182,14 +265,21 @@ def main():
         if disponivel and preco:
             url = f"https://www.mercadolivre.com.br/p/{mlb_id}"
             ok  = salvar_preco(whey_id, preco, url)
+
             marcar_disponibilidade(whey_id, True)
+
             print(f"  {'OK' if ok else 'ERRO SUPABASE'} R${preco:.2f}")
-            if ok: sucessos += 1
-            else:  erros += 1
-        elif motivo == "sem_resultados":
+
+            if ok:
+                sucessos += 1
+            else:
+                erros += 1
+
+        elif motivo in ["sem_resultados", "sem_validos"]:
             marcar_disponibilidade(whey_id, False)
-            print(f"  Sem resultados")
+            print("  Sem ofertas boas")
             sem_estoque += 1
+
         else:
             print(f"  Falha: {motivo}")
             erros += 1
