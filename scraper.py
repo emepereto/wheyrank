@@ -1,10 +1,10 @@
 """
-WHEYRANK — Scraper v8 (com ranking inteligente estilo ML)
-=========================================================
+WHEYRANK — Scraper v8 (sem filtro artificial de preço)
+=====================================================
 - Usa /products/{id}/items
 - Filtra vendedores ruins
-- Usa score (reputação + vendas + frete + preço)
-- Evita preços absurdos
+- Usa score estilo Mercado Livre (buy box)
+- Sem corte fixo de preço
 - Renova token automaticamente
 """
 
@@ -119,7 +119,6 @@ def marcar_disponibilidade(whey_id, disponivel):
     )
 
 
-# 🧠 SCORE estilo Mercado Livre
 def calcular_score(item):
     seller = item.get("seller", {})
     rep = seller.get("reputation", {})
@@ -131,7 +130,7 @@ def calcular_score(item):
 
     score = 0
 
-    # 🟢 reputação
+    # 🟢 reputação (peso alto)
     if level == "5_green":
         score += 50
     elif level == "4_light_green":
@@ -144,10 +143,10 @@ def calcular_score(item):
         score += 30
     elif vendas > 100:
         score += 20
-    elif vendas > 50:
+    elif vendas > 10:
         score += 10
 
-    # 🚚 FULL (muito importante)
+    # 🚚 FULL
     if shipping.get("logistic_type") == "fulfillment":
         score += 40
 
@@ -155,7 +154,7 @@ def calcular_score(item):
     if shipping.get("free_shipping"):
         score += 10
 
-    # 💰 preço (menor = melhor, mas não domina tudo)
+    # 💰 preço (leve peso, não dominante)
     score += max(0, 2000 - price) / 100
 
     return score
@@ -199,15 +198,11 @@ def buscar_preco_ml(mlb_produto_id, access_token):
             level = rep.get("level_id")
             vendas = rep.get("transactions", {}).get("total", 0)
 
-            # 🔴 FILTROS BASE (igual afiliado)
+            # 🔴 FILTRO BASE (igual ML)
             if level not in ["4_light_green", "5_green"]:
                 continue
 
             if vendas < 10:
-                continue
-
-            # 💥 evita preços absurdos
-            if i["price"] < 120:
                 continue
 
             validos.append(i)
@@ -215,7 +210,6 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         if not validos:
             return None, False, "sem_validos"
 
-        # 🧠 escolhe melhor oferta (não a mais barata)
         item = max(validos, key=calcular_score)
 
         preco = float(item["price"])
