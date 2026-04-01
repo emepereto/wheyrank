@@ -193,10 +193,22 @@ footer a { color: var(--muted); }
 </section>
 
 <footer>
-  <p>Preços coletados automaticamente do Mercado Livre.</p>
+  <p>Preços coletados automaticamente do Mercado Livre a cada 6 horas.</p>
   <p>Os links são de afiliado — ao comprar, você apoia o site sem pagar nada a mais. 🤝</p>
-  <p style="margin-top:8px"><a href="#">Sobre</a> · <a href="#">Sugerir produto</a> · <a href="#">Contato</a></p>
+  <p style="margin-top:8px">
+    <a href="#sobre" onclick="abrirModal('sobre')">Sobre</a> ·
+    <a href="#" onclick="abrirModal('sugerir')">Sugerir produto</a> ·
+    <a href="#" onclick="abrirModal('contato')">Contato</a>
+  </p>
 </footer>
+
+<!-- Modal -->
+<div id="modal-overlay" onclick="fecharModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:20px;">
+  <div id="modal-box" onclick="event.stopPropagation()" style="background:#18191d;border:1px solid #2e2f35;border-radius:12px;padding:28px;max-width:480px;width:100%;position:relative;">
+    <button onclick="fecharModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:#7a7c84;font-size:20px;cursor:pointer;">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://biyndcbydqbnohzpuxnn.supabase.co';
@@ -315,6 +327,58 @@ function atualizarMeta(valor) {
 }
 
 carregarDados();
+
+function abrirModal(tipo) {
+  const conteudos = {
+    sobre: `
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Sobre o WheyRank</h2>
+      <p style="color:#7a7c84;font-size:14px;line-height:1.7;">O WheyRank compara o <strong style="color:#e8e9ec">custo real por grama de proteína</strong> de diferentes wheys — não só o preço do pote.</p>
+      <p style="color:#7a7c84;font-size:14px;line-height:1.7;margin-top:10px;">Os preços são coletados automaticamente do Mercado Livre a cada 6 horas via API oficial. Podem haver pequenas variações no momento da compra.</p>
+      <p style="color:#7a7c84;font-size:14px;line-height:1.7;margin-top:10px;">Os links são de afiliado — ao comprar pelo site, você apoia o projeto sem pagar nada a mais. 🤝</p>
+    `,
+    sugerir: `
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Sugerir produto</h2>
+      <p style="color:#7a7c84;font-size:14px;margin-bottom:16px;">Conhece um whey que deveria estar no ranking? Manda o nome e a marca:</p>
+      <form action="https://formspree.io/f/xvzvqlpd" method="POST" style="display:flex;flex-direction:column;gap:10px;">
+        <input type="hidden" name="tipo" value="sugestão de produto">
+        <input name="produto" placeholder="Ex: Optimum Nutrition Gold Standard" required
+          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
+        <input name="email" type="email" placeholder="Seu email (opcional)"
+          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
+        <button type="submit"
+          style="padding:10px;background:#c8f135;color:#111;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:14px;">
+          Enviar sugestão
+        </button>
+      </form>
+    `,
+    contato: `
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Contato</h2>
+      <p style="color:#7a7c84;font-size:14px;margin-bottom:16px;">Dúvidas, parcerias ou feedback:</p>
+      <form action="https://formspree.io/f/xvzvqlpd" method="POST" style="display:flex;flex-direction:column;gap:10px;">
+        <input type="hidden" name="tipo" value="contato">
+        <input name="nome" placeholder="Seu nome" required
+          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
+        <input name="email" type="email" placeholder="Seu email" required
+          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
+        <textarea name="mensagem" placeholder="Mensagem" rows="4" required
+          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;"></textarea>
+        <button type="submit"
+          style="padding:10px;background:#c8f135;color:#111;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:14px;">
+          Enviar mensagem
+        </button>
+      </form>
+    `
+  };
+  document.getElementById('modal-content').innerHTML = conteudos[tipo];
+  const overlay = document.getElementById('modal-overlay');
+  overlay.style.display = 'flex';
+}
+
+function fecharModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
 </script>
 </body>
 </html>
