@@ -1,8 +1,8 @@
 """
-WHEYRANK — Scraper v7
+WHEYRANK — Scraper v8
 ======================
-- Usa /products/{id}/items para listar vendedores
-- Pega o menor preco entre todos
+- Filtra vendedores por qualidade (fulfillment, frete gratis, reputacao)
+- Pega o menor preco entre vendedores confiaveis
 - Renova token automaticamente
 - Roda no Railway a cada 6h: 0 */6 * * *
 """
@@ -90,7 +90,6 @@ def buscar_wheys():
 
 
 def salvar_preco(whey_id, preco, url_produto):
-    # Apaga registro anterior desse whey para manter só o mais recente
     requests.delete(
         f"{SUPABASE_URL}/rest/v1/precos",
         headers=HEADERS_SUPA,
@@ -119,6 +118,54 @@ def marcar_disponibilidade(whey_id, disponivel):
     )
 
 
+def calcular_score(item):
+    """
+    Calcula um score de qualidade do vendedor igual ao ML usa
+    para destacar anúncios. Quanto maior, mais confiável.
+    """
+    score = 0
+    tags  = item.get("tags", [])
+    ship  = item.get("shipping", {})
+
+    # Fulfillment (estoque no ML) — máxima confiança
+    if ship.get("logistic_type") == "fulfillment":
+        score += 50
+
+    # Frete grátis
+    if ship.get("free_shipping"):
+        score += 20
+
+    # Loja oficial
+    if item.get("official_store_id"):
+        score += 30
+
+    # Tags de qualidade do ML
+    if "good_quality_thumbnail"    in tags: score += 5
+    if "good_quality_picture"      in tags: score += 5
+    if "immediate_payment"         in tags: score += 5
+    if "cart_eligible"             in tags: score += 5
+    if "standard_price_by_channel" in tags: score += 5
+
+    return score
+
+
+def vendedor_confiavel(item):
+    """
+    Filtro mínimo de qualidade — descarta vendedores ruins.
+    Aceita se tiver pelo menos UMA das condições abaixo.
+    """
+    ship = item.get("shipping", {})
+    tags = item.get("tags", [])
+
+    tem_fulfillment   = ship.get("logistic_type") == "fulfillment"
+    tem_frete_gratis  = ship.get("free_shipping", False)
+    e_loja_oficial    = item.get("official_store_id") is not None
+    tem_cart_eligible = "cart_eligible" in tags
+
+    # Exige pelo menos frete grátis ou fulfillment ou loja oficial
+    return tem_fulfillment or tem_frete_gratis or e_loja_oficial
+
+
 def buscar_preco_ml(mlb_produto_id, access_token):
     try:
         resp = requests.get(
@@ -136,9 +183,26 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         if not resultados:
             return None, False, "sem_resultados"
 
-        item  = min(resultados, key=lambda x: x["price"])
+        # Filtra vendedores confiáveis
+        confiaveis = [r for r in resultados if vendedor_confiavel(r)]
+
+        # Se não sobrar nenhum, usa todos (fallback)
+        pool = confiaveis if confiaveis else resultados
+        fonte = "confiavel" if confiaveis else "fallback_todos"
+
+        # Ordena por score desc, depois por preço asc
+        # Pega o melhor preço entre os top vendedores (score >= mediana)
+        pool_com_score = [(calcular_score(r), r) for r in pool]
+        pool_com_score.sort(key=lambda x: (-x[0], x[1]["price"]))
+
+        # Considera os top 30% em score para pegar o menor preço entre os bons
+        top_n = max(1, len(pool_com_score) // 3)
+        top_vendedores = [r for _, r in pool_com_score[:top_n]]
+        item  = min(top_vendedores, key=lambda x: x["price"])
+
         preco = float(item["price"])
-        print(f"    menor preco: R${preco:.2f} ({item['item_id']})")
+        ltype = item.get("shipping", {}).get("logistic_type", "?")
+        print(f"    [{fonte}] R${preco:.2f} | logistic={ltype} | score={calcular_score(item)} ({item['item_id']})")
         return preco, True, "ok"
 
     except Exception as e:
@@ -154,7 +218,6 @@ def main():
         print("Tokens nao encontrados.")
         return
 
-    # Renova sempre antes de começar
     if refresh_token:
         novo, novo_r = renovar_token(refresh_token)
         if novo:
