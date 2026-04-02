@@ -1,9 +1,9 @@
 """
-WHEYRANK — Scraper v8
+WHEYRANK — Scraper v9
 ======================
-- Filtra vendedores por qualidade (fulfillment, frete gratis, reputacao)
-- Pega o menor preco entre vendedores confiaveis
-- Renova token automaticamente
+- Filtra vendedores ruins consultando reputação via API
+- Descarta "Nao oferece bom atendimento" e vendedores com poucas vendas
+- Paginação já no scraper — pega menor preco entre vendedores confiaveis
 - Roda no Railway a cada 6h: 0 */6 * * *
 """
 
@@ -23,6 +23,9 @@ HEADERS_SUPA = {
     "Content-Type":  "application/json",
     "Prefer":        "return=representation",
 }
+
+# Cache de reputação de vendedores para não repetir chamadas
+_cache_reputacao = {}
 
 
 def carregar_tokens():
@@ -118,52 +121,92 @@ def marcar_disponibilidade(whey_id, disponivel):
     )
 
 
+def buscar_reputacao(seller_id, access_token):
+    """
+    Consulta a reputação do vendedor via API.
+    Retorna o level_id (1_red, 2_orange, 3_yellow, 4_light_green, 5_green)
+    e o total de vendas. Usa cache para não repetir chamadas.
+    """
+    if seller_id in _cache_reputacao:
+        return _cache_reputacao[seller_id]
+
+    try:
+        resp = requests.get(
+            f"https://api.mercadolibre.com/users/{seller_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            dados = resp.json()
+            rep   = dados.get("seller_reputation", {})
+            level = rep.get("level_id", "")
+            trans = rep.get("transactions", {})
+            total = trans.get("total", 0)
+            result = {"level": level, "total_vendas": total}
+            _cache_reputacao[seller_id] = result
+            return result
+    except Exception:
+        pass
+
+    result = {"level": "", "total_vendas": 0}
+    _cache_reputacao[seller_id] = result
+    return result
+
+
+def vendedor_aprovado(item, access_token):
+    """
+    Critérios de aprovação — replica o que o ML usa para destacar vendedores:
+
+    REPROVADO se:
+    - Reputação vermelha (1_red) ou laranja (2_orange) — "Nao oferece bom atendimento"
+    - Menos de 10 vendas totais — vendedor novo sem histórico
+
+    APROVADO se passar nos critérios acima e tiver:
+    - Frete grátis OU fulfillment OU loja oficial
+    """
+    seller_id = item.get("seller_id")
+    ship      = item.get("shipping", {})
+
+    # Consulta reputação
+    rep = buscar_reputacao(seller_id, access_token)
+    level        = rep["level"]
+    total_vendas = rep["total_vendas"]
+
+    # Descarta reputação ruim
+    if level in ("1_red", "2_orange"):
+        return False, f"reputacao_{level}"
+
+    # Descarta vendedores com menos de 10 vendas
+    if total_vendas < 10 and level == "":
+        return False, "poucas_vendas"
+
+    # Exige pelo menos frete grátis, fulfillment ou loja oficial
+    tem_frete      = ship.get("free_shipping", False)
+    tem_fulfillment = ship.get("logistic_type") == "fulfillment"
+    e_oficial      = item.get("official_store_id") is not None
+
+    if not (tem_frete or tem_fulfillment or e_oficial):
+        return False, "sem_frete_gratis"
+
+    return True, "ok"
+
+
 def calcular_score(item):
-    """
-    Calcula um score de qualidade do vendedor igual ao ML usa
-    para destacar anúncios. Quanto maior, mais confiável.
-    """
+    """Score de prioridade — quanto maior, mais confiável."""
     score = 0
     tags  = item.get("tags", [])
     ship  = item.get("shipping", {})
 
-    # Fulfillment (estoque no ML) — máxima confiança
-    if ship.get("logistic_type") == "fulfillment":
-        score += 50
-
-    # Frete grátis
-    if ship.get("free_shipping"):
-        score += 20
-
-    # Loja oficial
-    if item.get("official_store_id"):
-        score += 30
-
-    # Tags de qualidade do ML
-    if "good_quality_thumbnail"    in tags: score += 5
-    if "good_quality_picture"      in tags: score += 5
-    if "immediate_payment"         in tags: score += 5
-    if "cart_eligible"             in tags: score += 5
-    if "standard_price_by_channel" in tags: score += 5
+    if ship.get("logistic_type") == "fulfillment": score += 50
+    if item.get("official_store_id"):              score += 30
+    if ship.get("free_shipping"):                  score += 20
+    if "good_quality_thumbnail" in tags:           score += 5
+    if "good_quality_picture"   in tags:           score += 5
+    if "immediate_payment"      in tags:           score += 5
+    if "cart_eligible"          in tags:           score += 5
+    if "user_product_unify"     in tags:           score += 5
 
     return score
-
-
-def vendedor_confiavel(item):
-    """
-    Filtro mínimo de qualidade — descarta vendedores ruins.
-    Aceita se tiver pelo menos UMA das condições abaixo.
-    """
-    ship = item.get("shipping", {})
-    tags = item.get("tags", [])
-
-    tem_fulfillment   = ship.get("logistic_type") == "fulfillment"
-    tem_frete_gratis  = ship.get("free_shipping", False)
-    e_loja_oficial    = item.get("official_store_id") is not None
-    tem_cart_eligible = "cart_eligible" in tags
-
-    # Exige pelo menos frete grátis ou fulfillment ou loja oficial
-    return tem_fulfillment or tem_frete_gratis or e_loja_oficial
 
 
 def buscar_preco_ml(mlb_produto_id, access_token):
@@ -183,26 +226,33 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         if not resultados:
             return None, False, "sem_resultados"
 
-        # Filtra vendedores confiáveis
-        confiaveis = [r for r in resultados if vendedor_confiavel(r)]
+        # Filtra por qualidade consultando reputação
+        aprovados = []
+        for item in resultados:
+            ok, motivo = vendedor_aprovado(item, access_token)
+            if ok:
+                aprovados.append(item)
+            time.sleep(0.05)  # Evita rate limit nas chamadas de reputação
 
-        # Se não sobrar nenhum, usa todos (fallback)
-        pool = confiaveis if confiaveis else resultados
-        fonte = "confiavel" if confiaveis else "fallback_todos"
+        # Se nenhum aprovado, relaxa o filtro e usa todos com frete grátis
+        if not aprovados:
+            print(f"    Nenhum aprovado — relaxando filtro")
+            aprovados = [r for r in resultados if r.get("shipping", {}).get("free_shipping")]
 
-        # Ordena por score desc, depois por preço asc
-        # Pega o melhor preço entre os top vendedores (score >= mediana)
-        pool_com_score = [(calcular_score(r), r) for r in pool]
-        pool_com_score.sort(key=lambda x: (-x[0], x[1]["price"]))
+        # Se ainda vazio, usa todos (último recurso)
+        if not aprovados:
+            aprovados = resultados
 
-        # Considera os top 30% em score para pegar o menor preço entre os bons
-        top_n = max(1, len(pool_com_score) // 3)
-        top_vendedores = [r for _, r in pool_com_score[:top_n]]
-        item  = min(top_vendedores, key=lambda x: x["price"])
+        # Ordena por score e pega menor preço entre os melhores
+        aprovados.sort(key=lambda x: -calcular_score(x))
+        top_n = max(1, len(aprovados) // 3)
+        top   = aprovados[:top_n]
+        item  = min(top, key=lambda x: x["price"])
 
         preco = float(item["price"])
+        level = _cache_reputacao.get(item.get("seller_id"), {}).get("level", "?")
         ltype = item.get("shipping", {}).get("logistic_type", "?")
-        print(f"    [{fonte}] R${preco:.2f} | logistic={ltype} | score={calcular_score(item)} ({item['item_id']})")
+        print(f"    R${preco:.2f} | rep={level} | logistic={ltype} | score={calcular_score(item)}")
         return preco, True, "ok"
 
     except Exception as e:
