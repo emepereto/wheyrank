@@ -258,15 +258,31 @@ function corrigirPreco(wheyId, valor) {
   if (wheys.length > 0) renderizar();
 }
 
+const POR_PAGINA = 5;
+let paginaAtual = 0;
+let ordenadosCache = [];
+
 function renderizar() {
-  const ordenados = wheys
+  paginaAtual = 0;
+  ordenadosCache = wheys
     .map(w => ({ ...w, ...calcularParaMeta(w, metaProt) }))
     .sort((a, b) => a.custoParaMeta - b.custoParaMeta);
 
   const container = document.getElementById('ranking-list');
   container.innerHTML = '';
+  document.getElementById('btn-mais')?.remove();
 
-  ordenados.forEach((w, i) => {
+  renderizarPagina();
+}
+
+function renderizarPagina() {
+  const container = document.getElementById('ranking-list');
+  const inicio = paginaAtual * POR_PAGINA;
+  const fim    = inicio + POR_PAGINA;
+  const fatia  = ordenadosCache.slice(inicio, fim);
+
+  fatia.forEach((w, i) => {
+    const i_global = inicio + i;
     const pos        = i + 1;
     const clase      = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-other';
     const emoji      = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
@@ -279,7 +295,7 @@ function renderizar() {
     const valorCorrigido = precosCorrigidos[w.id] ? precosCorrigidos[w.id].toFixed(2) : '';
 
     container.innerHTML += `
-      <div class="card" style="animation-delay:${i * 0.05}s">
+      <div class="card" style="animation-delay:${i_global * 0.05}s">
         <div class="card-pos ${clase}">${emoji}</div>
         <div class="card-info">
           <div class="card-name">${w.nome} · ${w.marca} · ${w.sabor || ''}</div>
@@ -318,6 +334,21 @@ function renderizar() {
       </div>
     `;
   });
+
+  // Remove botão antigo se existir
+  document.getElementById('btn-mais')?.remove();
+
+  // Adiciona botão se ainda houver mais
+  if (fim < ordenadosCache.length) {
+    const btn = document.createElement('button');
+    btn.id = 'btn-mais';
+    btn.textContent = `Ver mais ${Math.min(POR_PAGINA, ordenadosCache.length - fim)} wheys`;
+    btn.onclick = () => { paginaAtual++; renderizarPagina(); };
+    btn.style.cssText = 'width:100%;padding:14px;background:transparent;border:1px solid #2e2f35;border-radius:12px;color:#7a7c84;font-size:14px;font-family:"DM Sans",sans-serif;cursor:pointer;margin-top:4px;transition:border-color .2s,color .2s;';
+    btn.onmouseover = () => { btn.style.borderColor = '#c8f135'; btn.style.color = '#c8f135'; };
+    btn.onmouseout  = () => { btn.style.borderColor = '#2e2f35'; btn.style.color = '#7a7c84'; };
+    container.after(btn);
+  }
 }
 
 function atualizarMeta(valor) {
@@ -339,7 +370,7 @@ function abrirModal(tipo) {
     sugerir: `
       <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Sugerir produto</h2>
       <p style="color:#7a7c84;font-size:14px;margin-bottom:16px;">Conhece um whey que deveria estar no ranking? Manda o nome e a marca:</p>
-      <form action="https://formspree.io/f/xvzvqlpd" method="POST" style="display:flex;flex-direction:column;gap:10px;">
+      <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:10px;">
         <input type="hidden" name="tipo" value="sugestão de produto">
         <input name="produto" placeholder="Ex: Optimum Nutrition Gold Standard" required
           style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
@@ -354,7 +385,7 @@ function abrirModal(tipo) {
     contato: `
       <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Contato</h2>
       <p style="color:#7a7c84;font-size:14px;margin-bottom:16px;">Dúvidas, parcerias ou feedback:</p>
-      <form action="https://formspree.io/f/xvzvqlpd" method="POST" style="display:flex;flex-direction:column;gap:10px;">
+      <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:10px;">
         <input type="hidden" name="tipo" value="contato">
         <input name="nome" placeholder="Seu nome" required
           style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
