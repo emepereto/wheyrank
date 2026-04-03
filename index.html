@@ -142,29 +142,38 @@ footer a { color: var(--muted); }
 <!-- ─── Seção educativa ─── -->
 <div class="edu-section">
 
-  <div class="edu-card destaque">
-    <div class="edu-tag">⚡ Você sabia?</div>
-    <div class="edu-titulo">Você pode estar pagando mais caro por proteína sem perceber</div>
-    <div class="edu-texto">
-      Dois wheys com o mesmo preço de pote podem ter custos <strong>completamente diferentes por grama de proteína</strong>.
-      Um whey com dose maior precisa de mais pó para a mesma quantidade de proteína — e isso encarece o custo real por uso.
-    </div>
-    <div class="edu-exemplo">
-      <div class="edu-item">
-        <div class="edu-item-label">Whey A — parece mais barato</div>
-        <div class="edu-item-nome">R$79,90 · 900g · 30g/dose · 21g prot</div>
-        <div class="edu-item-preco">R$4,57</div>
-        <div class="edu-item-sub">por dose de 24g de proteína</div>
+  <div class="edu-card destaque" style="cursor:pointer;" onclick="toggleSabia(this)">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div class="edu-tag">⚡ Você sabia?</div>
+        <div class="edu-titulo" style="margin-bottom:0">Você pode estar pagando mais caro por proteína sem perceber</div>
       </div>
-      <div class="edu-item melhor">
-        <div class="edu-item-label">Whey B — melhor custo real ✓</div>
-        <div class="edu-item-nome">R$84,30 · 900g · 30g/dose · 23g prot</div>
-        <div class="edu-item-preco destaque">R$3,67</div>
-        <div class="edu-item-sub destaque">por dose de 24g de proteína — 20% mais barato</div>
-      </div>
+      <div id="sabia-icon" style="font-size:20px;color:var(--accent);margin-left:16px;flex-shrink:0;transition:transform .3s;">▼</div>
     </div>
-    <div class="edu-texto" style="margin-top:8px">
-      O WheyRank faz esse cálculo automaticamente para você. <strong>Ajuste a meta de proteína acima</strong> e veja o custo real de cada produto no ranking abaixo.
+    <div id="sabia-conteudo" style="overflow:hidden;max-height:0;transition:max-height .4s ease;">
+      <div style="padding-top:14px;">
+        <div class="edu-texto">
+          Dois wheys com o mesmo preço de pote podem ter custos <strong>completamente diferentes por grama de proteína</strong>.
+          Um whey com dose maior precisa de mais pó para a mesma quantidade de proteína — e isso encarece o custo real por uso.
+        </div>
+        <div class="edu-exemplo">
+          <div class="edu-item">
+            <div class="edu-item-label">Whey A — parece mais barato</div>
+            <div class="edu-item-nome">R$79,90 · 900g · 30g/dose · 21g prot</div>
+            <div class="edu-item-preco">R$4,57</div>
+            <div class="edu-item-sub">por dose de 24g de proteína</div>
+          </div>
+          <div class="edu-item melhor">
+            <div class="edu-item-label">Whey B — melhor custo real ✓</div>
+            <div class="edu-item-nome">R$84,30 · 900g · 30g/dose · 23g prot</div>
+            <div class="edu-item-preco destaque">R$3,67</div>
+            <div class="edu-item-sub destaque">por dose de 24g de proteína — 20% mais barato</div>
+          </div>
+        </div>
+        <div class="edu-texto" style="margin-top:8px">
+          O WheyRank faz esse cálculo automaticamente para você. <strong>Ajuste a meta de proteína acima</strong> e veja o custo real de cada produto no ranking abaixo.
+        </div>
+      </div>
     </div>
   </div>
 
@@ -283,7 +292,7 @@ function renderizarPagina() {
 
   fatia.forEach((w, i) => {
     const i_global = inicio + i;
-    const pos        = i + 1;
+    const pos        = inicio + i + 1;
     const clase      = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-other';
     const emoji      = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
     const perc       = Math.round((w.prot_por_dose / w.dose_g) * 100);
@@ -358,6 +367,19 @@ function atualizarMeta(valor) {
 }
 
 carregarDados();
+
+function toggleSabia(card) {
+  const conteudo = document.getElementById('sabia-conteudo');
+  const icon     = document.getElementById('sabia-icon');
+  const aberto   = conteudo.style.maxHeight !== '0px' && conteudo.style.maxHeight !== '';
+  if (aberto) {
+    conteudo.style.maxHeight = '0';
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    conteudo.style.maxHeight = conteudo.scrollHeight + 'px';
+    icon.style.transform = 'rotate(180deg)';
+  }
+}
 
 function abrirModal(tipo) {
   const conteudos = {
