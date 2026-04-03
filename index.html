@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Comparador de Whey Protein — Melhor Custo Benefício em 2025</title>
+<title>Comparador de Whey Protein — Melhor Custo Benefício</title>
 <meta name="description" content="Compare o custo benefício real dos melhores wheys protein do Brasil. Calcule o valor por grama de proteína e ache onde comprar mais barato.">
 <meta name="keywords" content="whey protein melhor custo beneficio, comparador whey, whey protein barato, proteina por real">
 <link rel="canonical" href="https://seusite.com.br/">
@@ -128,17 +128,6 @@ footer a { color: var(--muted); }
   <p>Comparamos o custo real por grama de proteína — não só o preço do pote. Atualizado automaticamente.</p>
 </section>
 
-<div class="calculator">
-  <div class="calc-label">Meta de proteína por dose</div>
-  <div class="calc-input-wrap">
-    <input type="range" id="meta-prot" min="15" max="50" value="24" step="1" oninput="atualizarMeta(this.value)">
-    <div class="calc-value"><span id="meta-valor">24</span>g</div>
-  </div>
-  <div class="calc-hint">
-    Ajuste a quantidade de proteína desejada — o ranking recalcula automaticamente o custo real de cada whey.
-  </div>
-</div>
-
 <!-- ─── Seção educativa ─── -->
 <div class="edu-section">
 
@@ -179,18 +168,27 @@ footer a { color: var(--muted); }
 
 </div>
 
-<!-- ─── Nota sobre preços ─── -->
-<div class="nota-precos">
-  <div class="nota-precos-inner">
-    <div class="nota-icon">ℹ️</div>
-    <div class="nota-texto">
-      <strong>Sobre os preços:</strong> os valores são coletados automaticamente do Mercado Livre a cada 6 horas e podem variar até o momento da compra. Se o preço que você encontrar no link for diferente, use o campo <strong>"preço diferente?"</strong> em cada produto para corrigir e recalcular o ranking com o valor real.
-    </div>
+<div class="calculator">
+  <div class="calc-label">Meta de proteína por dose</div>
+  <div class="calc-input-wrap">
+    <input type="range" id="meta-prot" min="15" max="50" value="24" step="1" oninput="atualizarMeta(this.value)">
+    <div class="calc-value"><span id="meta-valor">24</span>g</div>
+  </div>
+  <div class="calc-hint">
+    Ajuste a quantidade de proteína desejada — o ranking recalcula automaticamente o custo real de cada whey.
   </div>
 </div>
 
+
+
 <section class="section">
   <div class="section-title">RANKING — melhor custo por proteína</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+    <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2e1a;color:#5dcaa5;border:1px solid #0f6e56;">✓ Whey 100% soro do leite</span>
+    <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2e1a;color:#5dcaa5;border:1px solid #0f6e56;">✓ Sem blend com proteína de soja</span>
+    <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2e1a;color:#5dcaa5;border:1px solid #0f6e56;">✓ Marcas reconhecidas no mercado</span>
+    <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2e1a;color:#5dcaa5;border:1px solid #0f6e56;">✓ Custo competitivo verificado</span>
+  </div>
   <div class="skeleton-wrap" id="skeleton">
     <div class="skeleton-card"></div>
     <div class="skeleton-card"></div>
@@ -200,6 +198,16 @@ footer a { color: var(--muted); }
   </div>
   <div id="ranking-list" style="display:none"></div>
 </section>
+
+<!-- ─── Nota sobre preços ─── -->
+<div class="nota-precos">
+  <div class="nota-precos-inner">
+    <div class="nota-icon">ℹ️</div>
+    <div class="nota-texto">
+      <strong>Sobre os preços:</strong> os valores são coletados automaticamente do Mercado Livre a cada 6 horas e podem variar até o momento da compra. Se o preço que você encontrar no link for diferente, use o campo <strong>"preço diferente?"</strong> em cada produto para corrigir e recalcular o ranking com o valor real.
+    </div>
+  </div>
+</div>
 
 <footer>
   <p>Preços coletados automaticamente do Mercado Livre a cada 6 horas.</p>
@@ -237,7 +245,7 @@ async function carregarDados() {
     wheys = await resp.json();
     document.getElementById('skeleton').style.display = 'none';
     document.getElementById('ranking-list').style.display = 'flex';
-    document.getElementById('last-update-text').textContent = 'Preços atualizados hoje';
+    const agora = new Date(); document.getElementById('last-update-text').textContent = `Preços atualizados em ${agora.toLocaleDateString('pt-BR')} às ${agora.getHours()}h`;
     renderizar();
   } catch (err) {
     console.error(err);
@@ -391,7 +399,8 @@ function abrirModal(tipo) {
     `,
     sugerir: `
       <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Sugerir produto</h2>
-      <p style="color:#7a7c84;font-size:14px;margin-bottom:16px;">Conhece um whey que deveria estar no ranking? Manda o nome e a marca:</p>
+      <p style="color:#7a7c84;font-size:14px;margin-bottom:8px;">Conhece um whey que deveria estar no ranking? Manda o nome e a marca.</p>
+      <p style="color:#7a7c84;font-size:12px;margin-bottom:16px;padding:8px 12px;background:#222328;border-radius:8px;">Os produtos precisam ser 100% soro do leite, sem adição de proteína de soja, de marcas estabelecidas no mercado.</p>
       <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:10px;">
         <input type="hidden" name="tipo" value="sugestão de produto">
         <input name="produto" placeholder="Ex: Optimum Nutrition Gold Standard" required
