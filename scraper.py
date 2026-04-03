@@ -1,9 +1,9 @@
 """
-WHEYRANK — Scraper v10 (ML-like ranking)
-========================================
-- Replica lógica do Mercado Livre (ranking por score, não filtro rígido)
-- Remove apenas vendedores MUITO ruins
-- Prioriza reputação, FULL, frete grátis e preço
+WHEYRANK — Scraper v10 (melhorado)
+====================================
+- Score composto replica ranking do ML
+- Logs completos + renovação de token no meio da execução
+- Sleep seguro para evitar rate limit
 """
 
 import os
@@ -25,7 +25,7 @@ HEADERS_SUPA = {
 
 _cache_reputacao = {}
 
-# ========================= TOKENS =========================
+# ── Tokens ──────────────────────────────────────────────────
 
 def carregar_tokens():
     try:
@@ -36,7 +36,8 @@ def carregar_tokens():
         )
         dados = {r["chave"]: r["valor"] for r in resp.json()}
         return dados.get("ml_access_token"), dados.get("ml_refresh_token")
-    except:
+    except Exception as e:
+        print(f"  Erro ao carregar tokens: {e}")
         return None, None
 
 
@@ -57,24 +58,32 @@ def salvar_tokens(access_token, refresh_token):
 
 
 def renovar_token(refresh_token):
-    resp = requests.post(
-        "https://api.mercadolibre.com/oauth/token",
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        data={
-            "grant_type":    "refresh_token",
-            "client_id":     ML_APP_ID,
-            "client_secret": ML_SECRET,
-            "refresh_token": refresh_token,
-        },
-        timeout=15,
-    )
-    if resp.status_code == 200:
-        dados = resp.json()
-        salvar_tokens(dados["access_token"], dados.get("refresh_token", refresh_token))
-        return dados["access_token"], dados.get("refresh_token", refresh_token)
+    print("  Renovando token...")
+    try:
+        resp = requests.post(
+            "https://api.mercadolibre.com/oauth/token",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data={
+                "grant_type":    "refresh_token",
+                "client_id":     ML_APP_ID,
+                "client_secret": ML_SECRET,
+                "refresh_token": refresh_token,
+            },
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            dados = resp.json()
+            novo_access  = dados["access_token"]
+            novo_refresh = dados.get("refresh_token", refresh_token)
+            salvar_tokens(novo_access, novo_refresh)
+            print("  Token renovado com sucesso")
+            return novo_access, novo_refresh
+        print(f"  Erro ao renovar token: {resp.status_code} {resp.text[:100]}")
+    except Exception as e:
+        print(f"  Erro ao renovar token: {e}")
     return None, None
 
-# ========================= DATA =========================
+# ── Supabase ─────────────────────────────────────────────────
 
 def buscar_wheys():
     resp = requests.get(
@@ -96,9 +105,9 @@ def salvar_preco(whey_id, preco, url_produto):
         f"{SUPABASE_URL}/rest/v1/precos",
         headers=HEADERS_SUPA,
         json={
-            "whey_id": whey_id,
-            "plataforma": "mercadolivre",
-            "preco": preco,
+            "whey_id":     whey_id,
+            "plataforma":  "mercadolivre",
+            "preco":       preco,
             "url_produto": url_produto,
             "coletado_em": datetime.utcnow().isoformat(),
         },
@@ -114,7 +123,7 @@ def marcar_disponibilidade(whey_id, disponivel):
         json={"disponivel": disponivel},
     )
 
-# ========================= REPUTAÇÃO =========================
+# ── Reputação ────────────────────────────────────────────────
 
 def buscar_reputacao(seller_id, access_token):
     if seller_id in _cache_reputacao:
@@ -129,71 +138,51 @@ def buscar_reputacao(seller_id, access_token):
         if resp.status_code == 200:
             dados = resp.json()
             rep   = dados.get("seller_reputation", {})
-            level = rep.get("level_id", "")
-            total = rep.get("transactions", {}).get("total", 0)
-
-            result = {"level": level, "total_vendas": total}
+            result = {
+                "level":       rep.get("level_id", ""),
+                "total_vendas": rep.get("transactions", {}).get("total", 0),
+            }
             _cache_reputacao[seller_id] = result
             return result
-    except:
-        pass
+    except Exception as e:
+        print(f"    Erro reputação seller {seller_id}: {e}")
 
-    return {"level": "", "total_vendas": 0}
+    result = {"level": "", "total_vendas": 0}
+    _cache_reputacao[seller_id] = result
+    return result
 
-# ========================= FILTRO =========================
+# ── Score ────────────────────────────────────────────────────
 
-def vendedor_aprovado(item, access_token):
-    """
-    Agora só remove vendedores MUITO ruins (igual ML)
-    """
-    seller_id = item.get("seller_id")
-    rep = buscar_reputacao(seller_id, access_token)
-
-    if rep["level"] in ("1_red", "2_orange"):
-        return False, "reputacao_ruim"
-
-    return True, "ok"
-
-# ========================= SCORE =========================
-
-def calcular_score(item, reputacao):
+def calcular_score(item, rep):
     score = 0
     tags  = item.get("tags", [])
     ship  = item.get("shipping", {})
+    level = rep["level"]
+    total = rep["total_vendas"]
 
-    level = reputacao["level"]
-    total = reputacao["total_vendas"]
-
-    # 🔥 REPUTAÇÃO (mais importante)
+    # Reputação (fator principal)
     if level == "5_green":         score += 100
     elif level == "4_light_green": score += 80
     elif level == "3_yellow":      score += 40
     else:                          score -= 50
 
-    # 📦 FULL
-    if ship.get("logistic_type") == "fulfillment":
-        score += 70
+    # Logística
+    if ship.get("logistic_type") == "fulfillment": score += 70
+    if ship.get("free_shipping"):                  score += 40
+    if item.get("official_store_id"):              score += 50
 
-    # 🚚 Frete grátis
-    if ship.get("free_shipping"):
-        score += 40
+    # Volume de vendas
+    if total > 1000:   score += 40
+    elif total > 100:  score += 20
+    elif total > 10:   score += 10
 
-    # 🏪 Loja oficial
-    if item.get("official_store_id"):
-        score += 50
-
-    # 📊 Volume de vendas (SEM BLOQUEIO)
-    if total > 1000: score += 40
-    elif total > 100: score += 20
-    elif total > 10: score += 10
-
-    # 🏷️ Qualidade
+    # Qualidade do anúncio
     if "good_quality_thumbnail" in tags: score += 5
-    if "good_quality_picture" in tags:   score += 5
+    if "good_quality_picture"   in tags: score += 5
 
     return score
 
-# ========================= BUSCA =========================
+# ── Busca de preço ───────────────────────────────────────────
 
 def buscar_preco_ml(mlb_produto_id, access_token):
     try:
@@ -206,83 +195,100 @@ def buscar_preco_ml(mlb_produto_id, access_token):
 
         if resp.status_code == 401:
             return None, False, "token_expirado"
+        if resp.status_code != 200:
+            return None, False, f"erro_{resp.status_code}"
 
         resultados = resp.json().get("results", [])
         if not resultados:
             return None, False, "sem_resultados"
 
         avaliados = []
-
         for item in resultados:
-            ok, _ = vendedor_aprovado(item, access_token)
-            if not ok:
+            rep   = buscar_reputacao(item["seller_id"], access_token)
+            # Remove apenas reputação muito ruim
+            if rep["level"] in ("1_red", "2_orange"):
                 continue
-
-            rep = buscar_reputacao(item["seller_id"], access_token)
-            score = calcular_score(item, rep)
-
+            score       = calcular_score(item, rep)
             item["_score"] = score
             avaliados.append(item)
+            time.sleep(0.05)  # Rate limit seguro
 
-            time.sleep(0.03)
-
+        # Fallback se todos foram filtrados
         if not avaliados:
             avaliados = resultados
+            for item in avaliados:
+                item["_score"] = 0
 
-        # 🔥 ORDENA POR SCORE (igual ML)
+        # Ordena por score, pega menor preço entre top terço
         avaliados.sort(key=lambda x: -x["_score"])
-
-        # 🔥 PEGA TOP TERÇO
         top_n = max(1, len(avaliados) // 3)
         top   = avaliados[:top_n]
-
-        # 🔥 MENOR PREÇO ENTRE OS MELHORES
-        item = min(top, key=lambda x: x["price"])
-
+        item  = min(top, key=lambda x: x["price"])
         preco = float(item["price"])
 
-        print(f"    R${preco:.2f} | score={item['_score']}")
-
+        rep   = _cache_reputacao.get(item["seller_id"], {})
+        ltype = item.get("shipping", {}).get("logistic_type", "?")
+        print(f"    R${preco:.2f} | rep={rep.get('level','?')} | logistic={ltype} | score={item['_score']} | vendas={rep.get('total_vendas','?')}")
         return preco, True, "ok"
 
     except Exception as e:
         return None, False, f"erro: {e}"
 
-# ========================= MAIN =========================
+# ── Main ─────────────────────────────────────────────────────
 
 def main():
-    print(f"\nIniciando: {datetime.now()}")
-    print("=" * 50)
+    print(f"\nIniciando: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    print("=" * 52)
 
     access_token, refresh_token = carregar_tokens()
     if not access_token:
-        print("Sem token")
+        print("Tokens não encontrados.")
         return
 
+    # Renova sempre antes de começar
     if refresh_token:
-        novo, refresh_token = renovar_token(refresh_token)
+        novo, novo_r = renovar_token(refresh_token)
         if novo:
-            access_token = novo
+            access_token  = novo
+            refresh_token = novo_r
 
     wheys = buscar_wheys()
+    print(f"Produtos: {len(wheys)}\n")
+
+    sucessos = erros = sem_estoque = 0
 
     for w in wheys:
-        print(f">> {w['nome']}")
+        label = f"{w['marca']} {w.get('nome','')} {w.get('sabor','')}"
+        print(f">> {label} ({w['ml_item_id']})")
 
         preco, disponivel, motivo = buscar_preco_ml(w["ml_item_id"], access_token)
 
+        # Tenta renovar token se expirou no meio
+        if motivo == "token_expirado":
+            access_token, refresh_token = renovar_token(refresh_token)
+            if access_token:
+                preco, disponivel, motivo = buscar_preco_ml(w["ml_item_id"], access_token)
+
         if disponivel and preco:
             url = f"https://www.mercadolivre.com.br/p/{w['ml_item_id']}"
-            salvar_preco(w["id"], preco, url)
+            ok  = salvar_preco(w["id"], preco, url)
             marcar_disponibilidade(w["id"], True)
-            print(f"  OK R${preco:.2f}")
-        else:
+            print(f"  {'OK' if ok else 'ERRO SUPABASE'} R${preco:.2f}")
+            if ok: sucessos += 1
+            else:  erros += 1
+        elif motivo == "sem_resultados":
             marcar_disponibilidade(w["id"], False)
+            print(f"  Sem resultados")
+            sem_estoque += 1
+        else:
             print(f"  Falha: {motivo}")
+            erros += 1
 
         time.sleep(1)
 
-    print("\nFinalizado\n")
+    print("\n" + "=" * 52)
+    print(f"Atualizados: {sucessos} | Sem estoque: {sem_estoque} | Erros: {erros}")
+    print(f"Finalizado: {datetime.now().strftime('%H:%M:%S')}\n")
 
 
 if __name__ == "__main__":
