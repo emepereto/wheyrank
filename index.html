@@ -56,89 +56,68 @@ header { background: var(--bg2); border-bottom: 1px solid var(--border); padding
 .section-title { font-family: var(--font-display); font-size: 15px; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
 
 /* ─── Skeleton ─── */
-.skeleton-wrap { display: flex; flex-direction: column; gap: 6px; }
-.skeleton-card { background: var(--bg2); border-radius: var(--r); height: 62px; border: 1px solid var(--border); overflow: hidden; position: relative; }
+.skeleton-wrap { display: flex; flex-direction: column; gap: 5px; }
+.skeleton-card { background: var(--bg2); border-radius: var(--r); height: 58px; border: 1px solid var(--border); overflow: hidden; position: relative; }
 .skeleton-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%); animation: shimmer 1.4s infinite; }
 @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-/* ─── Card compacto ─── */
+/* ─── Card ─── */
 #ranking-list { display: flex; flex-direction: column; gap: 5px; }
 
 .card {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 8px 12px;
+  padding: 9px 14px 9px 12px;
   display: grid;
-  grid-template-columns: 32px 1fr auto;
-  gap: 10px;
+  /* pos | info | pote | custo | btn */
+  grid-template-columns: 30px 1fr auto auto auto;
+  gap: 0 14px;
   align-items: center;
   transition: border-color .2s, transform .15s;
-  animation: fadeUp .4s ease both;
-  cursor: default;
+  animation: fadeUp .35s ease both;
 }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .card:hover { border-color: #3e3f47; transform: translateY(-1px); }
 
 /* Posição */
-.card-pos { font-family: var(--font-display); font-size: 20px; text-align: center; line-height: 1; }
+.card-pos { font-family: var(--font-display); font-size: 22px; text-align: center; line-height: 1; }
 .card-pos.pos-1 { color: var(--accent); }
 .card-pos.pos-2 { color: var(--accent2); }
 .card-pos.pos-3 { color: var(--gold); }
-.card-pos.pos-other { color: var(--muted); }
+.card-pos.pos-other { color: var(--muted); font-size: 16px; }
 
-/* Info centro */
+/* Info — nome + pills */
 .card-info { min-width: 0; }
-.card-name { font-weight: 600; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-.card-sub { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 3px; }
-.pill { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; background: var(--bg3); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
-.pill.highlight { border-color: rgba(200,241,53,0.4); color: var(--accent); background: rgba(200,241,53,0.07); }
+.card-name { font-weight: 600; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; margin-bottom: 3px; }
+.card-pills { display: flex; gap: 4px; flex-wrap: nowrap; }
+.pill { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 20px; background: var(--bg3); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.pill.highlight { border-color: rgba(200,241,53,0.35); color: var(--accent); background: rgba(200,241,53,0.07); }
 
-/* Direita */
-.card-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-/* Preço do pote — destaque */
+/* Preço do pote */
 .pote-block { text-align: right; }
-.pote-valor { font-family: var(--font-display); font-size: 20px; color: var(--text); line-height: 1; }
-.pote-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 1px; }
+.pote-valor { font-family: var(--font-display); font-size: 18px; color: var(--text); line-height: 1; }
+.pote-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.pote-input-wrap { display: flex; align-items: center; gap: 4px; margin-top: 3px; justify-content: flex-end; }
+.pote-input-wrap label { font-size: 10px; color: var(--muted); white-space: nowrap; cursor: pointer; }
+.preco-input { width: 75px; padding: 3px 7px; background: var(--bg3); border: 1px dashed var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 12px; font-family: var(--font-body); text-align: right; transition: border-color .2s; }
+.preco-input:focus { outline: none; border-color: var(--accent); border-style: solid; }
+.preco-input::placeholder { color: var(--muted); opacity: 0.4; }
 
-/* Custo real */
-.meta-block {
-  background: rgba(200,241,53,0.08);
-  border: 1px solid rgba(200,241,53,0.2);
-  border-radius: var(--r-sm);
-  padding: 5px 10px;
-  text-align: center;
-  min-width: 90px;
-}
-.meta-label { font-size: 9px; color: rgba(200,241,53,0.6); text-transform: uppercase; letter-spacing: .5px; }
-.meta-custo { font-family: var(--font-display); font-size: 22px; color: var(--accent); line-height: 1.1; }
-.meta-sub { font-size: 9px; color: rgba(200,241,53,0.5); text-transform: uppercase; letter-spacing: .3px; }
+/* Custo real — destaque */
+.meta-block { background: rgba(200,241,53,0.07); border: 1px solid rgba(200,241,53,0.18); border-radius: var(--r-sm); padding: 5px 10px; text-align: center; }
+.meta-label { font-size: 9px; color: rgba(200,241,53,0.55); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+.meta-custo { font-family: var(--font-display); font-size: 24px; color: var(--accent); line-height: 1; }
+.meta-sub { font-size: 9px; color: rgba(200,241,53,0.45); white-space: nowrap; }
 
 /* Botão ML */
-.btn-ml { display: inline-block; font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 6px; text-decoration: none; background: var(--ml); color: #111; transition: opacity .15s, transform .1s; white-space: nowrap; line-height: 1.3; }
+.btn-ml { display: inline-block; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 6px; text-decoration: none; background: var(--ml); color: #111; transition: opacity .15s, transform .1s; white-space: nowrap; line-height: 1.3; }
 .btn-ml:hover { opacity: .85; transform: scale(1.02); }
-.btn-ml-soon { font-size: 10px; color: var(--muted); font-style: italic; }
+.btn-ml-soon { font-size: 10px; color: var(--muted); font-style: italic; white-space: nowrap; }
 
-/* ─── Expandir card (detalhes + corrigir preço) ─── */
-.card-expand { display: none; grid-column: 1 / -1; padding: 8px 0 2px; border-top: 1px solid var(--border); margin-top: 4px; }
-.card.open .card-expand { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.card.open { border-color: #3a3b44; }
-.expand-hint { font-size: 10px; color: var(--muted); cursor: pointer; padding: 3px 0; user-select: none; }
-.expand-hint:hover { color: var(--text); }
-
-.preco-corrigir { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--bg3); border: 1px dashed var(--border); border-radius: var(--r-sm); }
-.preco-corrigir label { font-size: 11px; color: var(--muted); white-space: nowrap; cursor: pointer; }
-.preco-input { width: 85px; padding: 4px 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 13px; font-family: var(--font-body); text-align: right; transition: border-color .2s; }
-.preco-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(200,241,53,0.15); }
-.preco-input::placeholder { color: var(--muted); opacity: 0.5; }
-.expand-detail { font-size: 11px; color: var(--muted); }
-.expand-detail strong { color: var(--text); }
+/* Corrigir preço */
+.preco-corrigir { display: flex; align-items: center; gap: 5px; }
+.preco-corrigir label { font-size: 10px; color: var(--muted); white-space: nowrap; cursor: pointer; }
 
 /* ─── Seção educativa ─── */
 .edu-section { max-width: 900px; margin: 0 auto 8px; padding: 0 24px; }
@@ -181,11 +160,10 @@ footer a { color: var(--muted); }
 .filtros { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .filtro-badge { font-size: 10px; padding: 2px 9px; border-radius: 20px; background: #0f2e1e; color: #5dcaa5; border: 1px solid #0f6e56; }
 
-@media (max-width: 600px) {
-  .card { grid-template-columns: 28px 1fr; gap: 8px; }
-  .card-right { grid-column: 2; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
-  .meta-block { min-width: 80px; }
+@media (max-width: 640px) {
+  .card { grid-template-columns: 28px 1fr auto auto; gap: 0 8px; }
   .pote-block { display: none; }
+  .btn-ml { font-size: 10px; padding: 5px 8px; }
 }
 </style>
 </head>
@@ -358,11 +336,6 @@ function renderizar() {
   renderizarPagina();
 }
 
-function toggleCard(id) {
-  const card = document.getElementById(`card-${id}`);
-  if (card) card.classList.toggle('open');
-}
-
 function renderizarPagina() {
   const container = document.getElementById('ranking-list');
   const inicio = paginaAtual * POR_PAGINA;
@@ -383,45 +356,30 @@ function renderizarPagina() {
     const vlrKg = w.vlr_por_kg_prot ? `R$${parseFloat(w.vlr_por_kg_prot).toFixed(2)}/kg prot` : '';
 
     container.innerHTML += `
-      <div class="card" id="card-${w.id}" style="animation-delay:${i_global * 0.05}s" onclick="toggleCard(${w.id})">
+      <div class="card" id="card-${w.id}" style="animation-delay:${i_global * 0.05}s">
 
         <div class="card-pos ${clase}">${emoji}</div>
 
         <div class="card-info">
           <div class="card-name">${w.nome} · ${w.marca}</div>
-          <div class="card-sub">
+          <div class="card-pills">
             <span class="pill highlight">${perc}% prot</span>
-            <span class="pill">${w.prot_por_dose}g/${w.dose_g}g dose</span>
+            <span class="pill">${w.prot_por_dose}g / ${w.dose_g}g dose</span>
             <span class="pill">${w.num_doses} doses</span>
             ${w.sabor ? `<span class="pill">${w.sabor}</span>` : ''}
           </div>
         </div>
 
-        <div class="card-right" onclick="event.stopPropagation()">
-          <div class="pote-block">
-            <div class="pote-valor">R$${w.preco.toFixed(2)}</div>
-            <div class="pote-label">pote ${w.peso_g}g</div>
-          </div>
-          <div class="meta-block">
-            <div class="meta-label">p/ ${metaProt}g prot</div>
-            <div class="meta-custo">R$${w.custoParaMeta.toFixed(2)}</div>
-            <div class="meta-sub">${dosesLabel}</div>
-          </div>
-          ${btnML}
-        </div>
-
-        <!-- Expansão com detalhes + corrigir preço -->
-        <div class="card-expand" onclick="event.stopPropagation()">
-          <div class="expand-detail">
-            <strong>${w.gPoNecessario}g de pó</strong> necessários · ${vlrKg}
-          </div>
+        <div class="pote-block">
+          <div class="pote-valor">R$${w.preco.toFixed(2)}</div>
+          <div class="pote-sub">pote · ${w.peso_g}g</div>
           <div class="preco-corrigir">
             <label for="preco-${w.id}">preço diferente?</label>
             <input
               id="preco-${w.id}"
               type="number"
               class="preco-input"
-              placeholder="corrigir R$"
+              placeholder="R$ corrigir"
               value="${valorCorrigido}"
               step="0.01" min="1"
               onchange="corrigirPreco(${w.id}, this.value)"
@@ -429,9 +387,13 @@ function renderizarPagina() {
           </div>
         </div>
 
-        <div style="grid-column:1/-1;text-align:center;padding-top:2px;">
-          <span class="expand-hint">▾ detalhes</span>
+        <div class="meta-block">
+          <div class="meta-label">p/ ${metaProt}g prot</div>
+          <div class="meta-custo">R$${w.custoParaMeta.toFixed(2)}</div>
+          <div class="meta-sub">${dosesLabel} · ${w.gPoNecessario}g de pó</div>
         </div>
+
+        ${btnML}
 
       </div>
     `;
