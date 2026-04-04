@@ -104,9 +104,9 @@ header { background: var(--bg2); border-bottom: 1px solid var(--border); padding
 .preco-input:focus { outline: none; border-color: var(--accent); border-style: solid; }
 .preco-input::placeholder { color: var(--muted); opacity: 0.4; }
 
-/* Custo real — destaque */
+/* No desktop card-bottom-row é invisível ao grid — filhos participam diretamente */
 .card-bottom-row { display: contents; }
-@media (max-width: 640px) { .card-bottom-row { display: flex; } }
+/* No mobile sobrescrito para display:flex no media query */
 .meta-block { background: rgba(200,241,53,0.07); border: 1px solid rgba(200,241,53,0.18); border-radius: var(--r-sm); padding: 5px 10px; text-align: center; }
 .meta-label { font-size: 9px; color: rgba(200,241,53,0.55); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
 .meta-custo { font-family: var(--font-display); font-size: 24px; color: var(--accent); line-height: 1; }
@@ -163,35 +163,50 @@ footer a { color: var(--muted); }
 .filtro-badge { font-size: 10px; padding: 2px 9px; border-radius: 20px; background: #0f2e1e; color: #5dcaa5; border: 1px solid #0f6e56; }
 
 @media (max-width: 640px) {
-  /* Linha 1: pos | nome+pills
-     Linha 2: —   | pote + custo + btn */
+  /* 
+    Linha 1: [pos] [nome + pills]
+    Linha 2: [pos] [pacote R$ · corrigir | custo verde | btn ML]
+  */
   .card {
-    grid-template-columns: 30px 1fr;
+    grid-template-columns: 28px 1fr;
     grid-template-rows: auto auto;
-    gap: 6px 10px;
-    padding: 10px 12px;
+    gap: 5px 8px;
+    padding: 9px 10px;
   }
+  .card-pos  { grid-column: 1; grid-row: 1 / 3; align-self: center; font-size: 20px; }
   .card-info { grid-column: 2; grid-row: 1; }
-  .card-pos  { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+  .card-name { font-size: 12px; }
+  .card-pills { gap: 3px; }
+  .pill { font-size: 9px; padding: 1px 5px; }
 
-  /* Segunda linha: tudo numa flex row */
+  /* Linha 2: pote-block + card-bottom-row juntos em flex */
+  .pote-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-shrink: 0;
+  }
+  .pote-valor { font-size: 13px; }
+  .pote-sub   { font-size: 9px; }
+  .preco-corrigir { margin-top: 2px; }
+  .preco-corrigir label { font-size: 9px; }
+  .preco-input { width: 62px; font-size: 11px; padding: 2px 5px; }
+
   .card-bottom-row {
     grid-column: 2;
     grid-row: 2;
-    display: flex;
+    display: flex !important;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: nowrap;
   }
 
-  /* Esconde preço do pote (pouco espaço) */
-  .pote-block { display: none; }
+  .meta-block { padding: 3px 7px; flex-shrink: 0; }
+  .meta-custo { font-size: 18px; }
+  .meta-label { font-size: 8px; }
+  .meta-sub   { font-size: 8px; }
 
-  .meta-block { padding: 4px 8px; flex-shrink: 0; }
-  .meta-custo { font-size: 20px; }
-  .meta-label, .meta-sub { font-size: 8px; }
-
-  .btn-ml { font-size: 10px; padding: 6px 10px; flex-shrink: 0; }
+  .btn-ml { font-size: 10px; padding: 5px 8px; flex-shrink: 0; }
 }
 </style>
 </head>
@@ -400,24 +415,23 @@ function renderizarPagina() {
           </div>
         </div>
 
-        <div class="pote-block">
-          <div class="pote-valor">R$${w.preco.toFixed(2)}</div>
-          <div class="pote-sub">pote · ${w.peso_g}g</div>
-          <div class="preco-corrigir">
-            <label for="preco-${w.id}">preço diferente?</label>
-            <input
-              id="preco-${w.id}"
-              type="number"
-              class="preco-input"
-              placeholder="R$ corrigir"
-              value="${valorCorrigido}"
-              step="0.01" min="1"
-              onchange="corrigirPreco(${w.id}, this.value)"
-            />
-          </div>
-        </div>
-
         <div class="card-bottom-row">
+          <div class="pote-block">
+            <div class="pote-valor">R$${w.preco.toFixed(2)}</div>
+            <div class="pote-sub">pacote · ${w.peso_g}g</div>
+            <div class="preco-corrigir">
+              <label for="preco-${w.id}">preço diferente?</label>
+              <input
+                id="preco-${w.id}"
+                type="number"
+                class="preco-input"
+                placeholder="R$ corrigir"
+                value="${valorCorrigido}"
+                step="0.01" min="1"
+                onchange="corrigirPreco(${w.id}, this.value)"
+              />
+            </div>
+          </div>
           <div class="meta-block">
             <div class="meta-label">p/ ${metaProt}g prot</div>
             <div class="meta-custo">R$${w.custoParaMeta.toFixed(2)}</div>
