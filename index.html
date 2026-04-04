@@ -44,7 +44,7 @@ header { background: var(--bg2); border-bottom: 1px solid var(--border); padding
 .hero p { color: var(--muted); font-size: 12px; max-width: 520px; }
 
 /* ─── Calculator ─── */
-.calculator { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 16px; max-width: 900px; margin: 8px auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.calculator { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 16px; margin: 8px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .calc-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
 .calc-input-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 160px; }
 .calc-input-wrap input[type="range"] { flex: 1; accent-color: var(--accent); height: 4px; }
@@ -105,6 +105,8 @@ header { background: var(--bg2); border-bottom: 1px solid var(--border); padding
 .preco-input::placeholder { color: var(--muted); opacity: 0.4; }
 
 /* Custo real — destaque */
+.card-bottom-row { display: contents; }
+@media (max-width: 640px) { .card-bottom-row { display: flex; } }
 .meta-block { background: rgba(200,241,53,0.07); border: 1px solid rgba(200,241,53,0.18); border-radius: var(--r-sm); padding: 5px 10px; text-align: center; }
 .meta-label { font-size: 9px; color: rgba(200,241,53,0.55); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
 .meta-custo { font-family: var(--font-display); font-size: 24px; color: var(--accent); line-height: 1; }
@@ -161,9 +163,35 @@ footer a { color: var(--muted); }
 .filtro-badge { font-size: 10px; padding: 2px 9px; border-radius: 20px; background: #0f2e1e; color: #5dcaa5; border: 1px solid #0f6e56; }
 
 @media (max-width: 640px) {
-  .card { grid-template-columns: 28px 1fr auto auto; gap: 0 8px; }
+  /* Linha 1: pos | nome+pills
+     Linha 2: —   | pote + custo + btn */
+  .card {
+    grid-template-columns: 30px 1fr;
+    grid-template-rows: auto auto;
+    gap: 6px 10px;
+    padding: 10px 12px;
+  }
+  .card-info { grid-column: 2; grid-row: 1; }
+  .card-pos  { grid-column: 1; grid-row: 1 / 3; align-self: center; }
+
+  /* Segunda linha: tudo numa flex row */
+  .card-bottom-row {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  /* Esconde preço do pote (pouco espaço) */
   .pote-block { display: none; }
-  .btn-ml { font-size: 10px; padding: 5px 8px; }
+
+  .meta-block { padding: 4px 8px; flex-shrink: 0; }
+  .meta-custo { font-size: 20px; }
+  .meta-label, .meta-sub { font-size: 8px; }
+
+  .btn-ml { font-size: 10px; padding: 6px 10px; flex-shrink: 0; }
 }
 </style>
 </head>
@@ -216,6 +244,7 @@ footer a { color: var(--muted); }
 </div>
 
 <!-- Calculadora -->
+<div style="max-width:900px;margin:0 auto;padding:0 24px 0;">
 <div class="calculator">
   <div class="calc-label">Meta de proteína por dose</div>
   <div class="calc-input-wrap">
@@ -223,6 +252,7 @@ footer a { color: var(--muted); }
     <div class="calc-value"><span id="meta-valor">24</span>g</div>
   </div>
   <div class="calc-hint">Ajuste a quantidade desejada — o ranking recalcula o custo real de cada whey.</div>
+</div>
 </div>
 
 <!-- Ranking -->
@@ -387,13 +417,14 @@ function renderizarPagina() {
           </div>
         </div>
 
-        <div class="meta-block">
-          <div class="meta-label">p/ ${metaProt}g prot</div>
-          <div class="meta-custo">R$${w.custoParaMeta.toFixed(2)}</div>
-          <div class="meta-sub">${dosesLabel} · ${w.gPoNecessario}g de pó</div>
+        <div class="card-bottom-row">
+          <div class="meta-block">
+            <div class="meta-label">p/ ${metaProt}g prot</div>
+            <div class="meta-custo">R$${w.custoParaMeta.toFixed(2)}</div>
+            <div class="meta-sub">${dosesLabel} · ${w.gPoNecessario}g de pó</div>
+          </div>
+          ${btnML}
         </div>
-
-        ${btnML}
 
       </div>
     `;
@@ -444,7 +475,7 @@ function abrirModal(tipo) {
       <h2 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#c8f135;margin-bottom:10px;">Sugerir produto</h2>
       <p style="color:#7a7c84;font-size:13px;margin-bottom:8px;">Conhece um whey que deveria estar no ranking? Manda o nome e a marca.</p>
       <p style="color:#7a7c84;font-size:11px;margin-bottom:14px;padding:8px 10px;background:#222328;border-radius:8px;">Precisam ser 100% soro do leite, sem soja, de marcas estabelecidas.</p>
-      <form action="https://formspree.io/f/xvzvqlpd" method="POST" style="display:flex;flex-direction:column;gap:8px;">
+      <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:8px;">
         <input type="hidden" name="tipo" value="sugestão de produto">
         <input name="produto" placeholder="Ex: Optimum Nutrition Gold Standard" required style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;">
         <input name="email" type="email" placeholder="Seu email (opcional)" style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;">
@@ -454,7 +485,7 @@ function abrirModal(tipo) {
     contato: `
       <h2 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#c8f135;margin-bottom:10px;">Contato</h2>
       <p style="color:#7a7c84;font-size:13px;margin-bottom:14px;">Dúvidas, parcerias ou feedback:</p>
-      <form action="https://formspree.io/f/xvzvqlpd" method="POST" style="display:flex;flex-direction:column;gap:8px;">
+      <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:8px;">
         <input type="hidden" name="tipo" value="contato">
         <input name="nome" placeholder="Seu nome" required style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;">
         <input name="email" type="email" placeholder="Seu email" required style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;">
