@@ -28,92 +28,164 @@
   --font-body: 'DM Sans', sans-serif;
 }
 body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.6; min-height: 100vh; }
-header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 16px; height: 60px; }
+
+/* ─── Header ─── */
+header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 16px; height: 52px; }
 .logo { font-family: var(--font-display); font-size: 22px; letter-spacing: 1px; color: var(--accent); text-decoration: none; }
 .logo span { color: var(--text); }
 .last-update { margin-left: auto; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-.dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+.dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; flex-shrink: 0; }
 @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
-.hero { padding: 20px 24px 12px; max-width: 900px; margin: 0 auto; }
-.hero h1 { font-family: var(--font-display); font-size: clamp(28px, 5vw, 44px); line-height: 1; letter-spacing: 1px; margin-bottom: 8px; }
+
+/* ─── Hero ─── */
+.hero { padding: 14px 24px 8px; max-width: 900px; margin: 0 auto; }
+.hero h1 { font-family: var(--font-display); font-size: clamp(24px, 4.5vw, 38px); line-height: 1; letter-spacing: 1px; margin-bottom: 4px; }
 .hero h1 em { font-style: normal; color: var(--accent); }
-.hero p { color: var(--muted); font-size: 13px; max-width: 520px; margin-bottom: 0; }
-.calculator { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 20px; max-width: 900px; margin: 12px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.calc-label { font-size: 13px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
-.calc-input-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
+.hero p { color: var(--muted); font-size: 12px; max-width: 520px; }
+
+/* ─── Calculator ─── */
+.calculator { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 16px; max-width: 900px; margin: 8px auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.calc-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+.calc-input-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 160px; }
 .calc-input-wrap input[type="range"] { flex: 1; accent-color: var(--accent); height: 4px; }
-.calc-value { font-family: var(--font-display); font-size: 22px; color: var(--accent); min-width: 60px; text-align: right; }
-.calc-hint { font-size: 12px; color: var(--muted); width: 100%; }
-.section { max-width: 900px; margin: 0 auto; padding: 0 24px 40px; }
-.section-title { font-family: var(--font-display); font-size: 18px; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
-.skeleton-wrap { display: flex; flex-direction: column; gap: 10px; }
-.skeleton-card { background: var(--bg2); border-radius: var(--r); height: 88px; border: 1px solid var(--border); overflow: hidden; position: relative; }
+.calc-value { font-family: var(--font-display); font-size: 20px; color: var(--accent); min-width: 50px; text-align: right; }
+.calc-hint { font-size: 11px; color: var(--muted); width: 100%; line-height: 1.4; }
+
+/* ─── Seção ─── */
+.section { max-width: 900px; margin: 0 auto; padding: 0 24px 32px; }
+.section-title { font-family: var(--font-display); font-size: 15px; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+
+/* ─── Skeleton ─── */
+.skeleton-wrap { display: flex; flex-direction: column; gap: 6px; }
+.skeleton-card { background: var(--bg2); border-radius: var(--r); height: 62px; border: 1px solid var(--border); overflow: hidden; position: relative; }
 .skeleton-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%); animation: shimmer 1.4s infinite; }
 @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-#ranking-list { display: flex; flex-direction: column; gap: 6px; }
-.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 14px; display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; transition: border-color .2s, transform .15s; animation: fadeUp .4s ease both; }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ─── Card compacto ─── */
+#ranking-list { display: flex; flex-direction: column; gap: 5px; }
+
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  transition: border-color .2s, transform .15s;
+  animation: fadeUp .4s ease both;
+  cursor: default;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .card:hover { border-color: #3e3f47; transform: translateY(-1px); }
-.card-pos { font-family: var(--font-display); font-size: 22px; text-align: center; line-height: 1; }
+
+/* Posição */
+.card-pos { font-family: var(--font-display); font-size: 20px; text-align: center; line-height: 1; }
 .card-pos.pos-1 { color: var(--accent); }
 .card-pos.pos-2 { color: var(--accent2); }
 .card-pos.pos-3 { color: var(--gold); }
 .card-pos.pos-other { color: var(--muted); }
-.card-name { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 1px; }
-.card-brand { font-size: 11px; color: var(--muted); margin-bottom: 5px; }
-.card-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.pill { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; background: var(--bg3); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
-.pill.highlight { border-color: var(--accent); color: var(--accent); }
-.card-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
-.card-price { font-family: var(--font-display); font-size: 16px; color: var(--muted); line-height: 1; }
-.card-price-sub { font-size: 11px; color: var(--muted); margin-top: 1px; opacity: 0.6; }
-/* Campo correção de preço */
-.preco-corrigir { display: flex; align-items: center; gap: 6px; margin-top: 3px; padding: 4px 8px; background: var(--bg3); border: 1px dashed var(--border); border-radius: var(--r-sm); }
-.preco-corrigir label { font-size: 12px; color: var(--muted); white-space: nowrap; cursor: pointer; }
-.preco-input { width: 90px; padding: 5px 9px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 14px; font-family: var(--font-body); text-align: right; transition: border-color .2s; }
+
+/* Info centro */
+.card-info { min-width: 0; }
+.card-name { font-weight: 600; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+.card-sub { font-size: 11px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 3px; }
+.pill { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; background: var(--bg3); border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+.pill.highlight { border-color: rgba(200,241,53,0.4); color: var(--accent); background: rgba(200,241,53,0.07); }
+
+/* Direita */
+.card-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Preço do pote — destaque */
+.pote-block { text-align: right; }
+.pote-valor { font-family: var(--font-display); font-size: 20px; color: var(--text); line-height: 1; }
+.pote-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 1px; }
+
+/* Custo real */
+.meta-block {
+  background: rgba(200,241,53,0.08);
+  border: 1px solid rgba(200,241,53,0.2);
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
+  text-align: center;
+  min-width: 90px;
+}
+.meta-label { font-size: 9px; color: rgba(200,241,53,0.6); text-transform: uppercase; letter-spacing: .5px; }
+.meta-custo { font-family: var(--font-display); font-size: 22px; color: var(--accent); line-height: 1.1; }
+.meta-sub { font-size: 9px; color: rgba(200,241,53,0.5); text-transform: uppercase; letter-spacing: .3px; }
+
+/* Botão ML */
+.btn-ml { display: inline-block; font-size: 11px; font-weight: 700; padding: 5px 11px; border-radius: 6px; text-decoration: none; background: var(--ml); color: #111; transition: opacity .15s, transform .1s; white-space: nowrap; line-height: 1.3; }
+.btn-ml:hover { opacity: .85; transform: scale(1.02); }
+.btn-ml-soon { font-size: 10px; color: var(--muted); font-style: italic; }
+
+/* ─── Expandir card (detalhes + corrigir preço) ─── */
+.card-expand { display: none; grid-column: 1 / -1; padding: 8px 0 2px; border-top: 1px solid var(--border); margin-top: 4px; }
+.card.open .card-expand { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.card.open { border-color: #3a3b44; }
+.expand-hint { font-size: 10px; color: var(--muted); cursor: pointer; padding: 3px 0; user-select: none; }
+.expand-hint:hover { color: var(--text); }
+
+.preco-corrigir { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--bg3); border: 1px dashed var(--border); border-radius: var(--r-sm); }
+.preco-corrigir label { font-size: 11px; color: var(--muted); white-space: nowrap; cursor: pointer; }
+.preco-input { width: 85px; padding: 4px 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); font-size: 13px; font-family: var(--font-body); text-align: right; transition: border-color .2s; }
 .preco-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(200,241,53,0.15); }
 .preco-input::placeholder { color: var(--muted); opacity: 0.5; }
-/* Bloco custo */
-.card-meta-block { background: var(--bg3); border: 1px solid #3a3d28; border-radius: var(--r-sm); padding: 7px 10px; text-align: right; min-width: 140px; }
-.card-meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 2px; }
-.card-meta-detail { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
-.card-meta-custo { font-family: var(--font-display); font-size: 28px; color: var(--accent); line-height: 1; letter-spacing: 0.5px; }
-.card-meta-custo-sub { font-size: 10px; color: var(--accent); opacity: 0.65; margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; }
-.btn-ml { display: inline-block; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 6px; text-decoration: none; background: var(--ml); color: #111; transition: opacity .15s, transform .1s; white-space: nowrap; }
-.btn-ml:hover { opacity: .85; transform: scale(1.02); }
-.btn-ml-soon { font-size: 11px; color: var(--muted); font-style: italic; }
-.error-msg { text-align: center; padding: 40px; color: var(--muted); }
-.error-msg strong { color: var(--danger); display: block; margin-bottom: 8px; }
-footer { border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.8; }
-footer a { color: var(--muted); }
+.expand-detail { font-size: 11px; color: var(--muted); }
+.expand-detail strong { color: var(--text); }
+
 /* ─── Seção educativa ─── */
-.edu-section { max-width: 900px; margin: 0 auto 10px; padding: 0 24px; }
-.edu-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 16px; margin-bottom: 8px; }
-.edu-card.destaque { border-color: var(--accent); background: rgba(200,241,53,0.04); }
-.edu-tag { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
-.edu-titulo { font-family: var(--font-display); font-size: 16px; letter-spacing: 0.5px; margin-bottom: 0; color: var(--text); line-height: 1.2; }
-.edu-texto { font-size: 14px; color: var(--muted); line-height: 1.7; }
+.edu-section { max-width: 900px; margin: 0 auto 8px; padding: 0 24px; }
+.edu-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 14px; }
+.edu-card.destaque { border-color: rgba(200,241,53,0.3); background: rgba(200,241,53,0.03); }
+.edu-tag { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
+.edu-titulo { font-family: var(--font-display); font-size: 15px; letter-spacing: 0.5px; color: var(--text); line-height: 1.2; }
+.edu-texto { font-size: 13px; color: var(--muted); line-height: 1.6; }
 .edu-texto strong { color: var(--text); }
-.edu-exemplo { display: flex; gap: 12px; margin: 16px 0 4px; flex-wrap: wrap; }
-.edu-item { flex: 1; min-width: 160px; background: var(--bg3); border-radius: var(--r-sm); padding: 12px 14px; border: 1px solid var(--border); }
-.edu-item.melhor { border-color: var(--accent); }
-.edu-item-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-.edu-item-nome { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
-.edu-item-preco { font-family: var(--font-display); font-size: 24px; color: var(--muted); line-height: 1; }
+.edu-exemplo { display: flex; gap: 10px; margin: 12px 0 4px; flex-wrap: wrap; }
+.edu-item { flex: 1; min-width: 150px; background: var(--bg3); border-radius: var(--r-sm); padding: 10px 12px; border: 1px solid var(--border); }
+.edu-item.melhor { border-color: rgba(200,241,53,0.3); }
+.edu-item-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+.edu-item-nome { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.edu-item-preco { font-family: var(--font-display); font-size: 22px; color: var(--muted); line-height: 1; }
 .edu-item-preco.destaque { color: var(--accent); }
-.edu-item-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.edu-item-sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
 .edu-item-sub.destaque { color: var(--accent); }
+
+/* ─── Nota preços ─── */
 .nota-precos { max-width: 900px; margin: 0 auto 12px; padding: 0 24px; }
-.nota-precos-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 10px 14px; display: flex; gap: 10px; align-items: flex-start; }
-.nota-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
-.nota-texto { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.nota-precos-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 12px; display: flex; gap: 8px; align-items: flex-start; }
+.nota-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.nota-texto { font-size: 11px; color: var(--muted); line-height: 1.5; }
 .nota-texto strong { color: var(--text); }
 
+/* ─── Error ─── */
+.error-msg { text-align: center; padding: 40px; color: var(--muted); }
+.error-msg strong { color: var(--danger); display: block; margin-bottom: 8px; }
+
+/* ─── Footer ─── */
+footer { border-top: 1px solid var(--border); padding: 20px 24px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.8; }
+footer a { color: var(--muted); }
+
+/* ─── Modal ─── */
+#modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+#modal-box { background: #18191d; border: 1px solid #2e2f35; border-radius: 12px; padding: 24px; max-width: 480px; width: 100%; position: relative; }
+
+/* ─── Badges filtro ─── */
+.filtros { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.filtro-badge { font-size: 10px; padding: 2px 9px; border-radius: 20px; background: #0f2e1e; color: #5dcaa5; border: 1px solid #0f6e56; }
+
 @media (max-width: 600px) {
-  .card { grid-template-columns: 36px 1fr; grid-template-rows: auto auto; }
-  .card-right { grid-column: 2; align-items: flex-start; text-align: left; }
-  .card-meta-block { text-align: left; min-width: unset; }
-  .card-meta-custo { font-size: 28px; }
+  .card { grid-template-columns: 28px 1fr; gap: 8px; }
+  .card-right { grid-column: 2; justify-content: flex-start; flex-wrap: wrap; gap: 6px; }
+  .meta-block { min-width: 80px; }
+  .pote-block { display: none; }
 }
 </style>
 </head>
@@ -123,32 +195,28 @@ footer a { color: var(--muted); }
   <a class="logo" href="/"><em>WHEY</em><span>RANK</span></a>
   <div class="last-update">
     <span class="dot"></span>
-    <span id="last-update-text">Atualizando preços...</span>
+    <span id="last-update-text">Atualizando...</span>
   </div>
 </header>
 
 <section class="hero">
-  <h1>Qual whey dá mais<br><em>proteína por real?</em></h1>
-  <p>Comparamos o custo real por grama de proteína — não só o preço do pote. Atualizado automaticamente.</p>
+  <h1>Qual whey dá mais <em>proteína por real?</em></h1>
+  <p>Custo real por grama de proteína — não só o preço do pote. Atualizado automaticamente.</p>
 </section>
 
-<!-- ─── Seção educativa ─── -->
+<!-- Educativa colapsável -->
 <div class="edu-section">
-
   <div class="edu-card destaque" style="cursor:pointer;" onclick="toggleSabia(this)">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div class="edu-tag">⚡ Você sabia?</div>
-        <div class="edu-titulo" style="margin-bottom:0">Você pode estar pagando mais caro por proteína sem perceber</div>
+        <div class="edu-titulo">Você pode estar pagando mais caro sem perceber</div>
       </div>
-      <div id="sabia-icon" style="font-size:20px;color:var(--accent);margin-left:16px;flex-shrink:0;transition:transform .3s;">▼</div>
+      <div id="sabia-icon" style="font-size:18px;color:var(--accent);margin-left:14px;flex-shrink:0;transition:transform .3s;">▼</div>
     </div>
     <div id="sabia-conteudo" style="overflow:hidden;max-height:0;transition:max-height .4s ease;">
-      <div style="padding-top:14px;">
-        <div class="edu-texto">
-          Dois wheys com o mesmo preço de pote podem ter custos <strong>completamente diferentes por grama de proteína</strong>.
-          Um whey com dose maior precisa de mais pó para a mesma quantidade de proteína — e isso encarece o custo real por uso.
-        </div>
+      <div style="padding-top:12px;">
+        <div class="edu-texto">Dois wheys com o mesmo preço de pote podem ter custos <strong>completamente diferentes por grama de proteína</strong>. Um whey com dose maior precisa de mais pó para a mesma quantidade — e isso encarece o custo real.</div>
         <div class="edu-exemplo">
           <div class="edu-item">
             <div class="edu-item-label">Whey A — parece mais barato</div>
@@ -160,38 +228,33 @@ footer a { color: var(--muted); }
             <div class="edu-item-label">Whey B — melhor custo real ✓</div>
             <div class="edu-item-nome">R$84,30 · 900g · 30g/dose · 23g prot</div>
             <div class="edu-item-preco destaque">R$3,67</div>
-            <div class="edu-item-sub destaque">por dose de 24g de proteína — 20% mais barato</div>
+            <div class="edu-item-sub destaque">por dose — 20% mais barato</div>
           </div>
         </div>
-        <div class="edu-texto" style="margin-top:8px">
-          O WheyRank faz esse cálculo automaticamente para você. <strong>Ajuste a meta de proteína acima</strong> e veja o custo real de cada produto no ranking abaixo.
-        </div>
+        <div class="edu-texto" style="margin-top:8px"><strong>Ajuste a meta de proteína</strong> abaixo e veja o custo real recalculado automaticamente.</div>
       </div>
     </div>
   </div>
-
 </div>
 
+<!-- Calculadora -->
 <div class="calculator">
   <div class="calc-label">Meta de proteína por dose</div>
   <div class="calc-input-wrap">
     <input type="range" id="meta-prot" min="15" max="50" value="24" step="1" oninput="atualizarMeta(this.value)">
     <div class="calc-value"><span id="meta-valor">24</span>g</div>
   </div>
-  <div class="calc-hint">
-    Ajuste a quantidade de proteína desejada — o ranking recalcula automaticamente o custo real de cada whey.
-  </div>
+  <div class="calc-hint">Ajuste a quantidade desejada — o ranking recalcula o custo real de cada whey.</div>
 </div>
 
-
-
+<!-- Ranking -->
 <section class="section">
   <div class="section-title">RANKING — melhor custo por proteína</div>
-  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
-    <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2e1a;color:#5dcaa5;border:1px solid #0f6e56;">✓ Whey 100% soro do leite</span>
-    <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2e1a;color:#5dcaa5;border:1px solid #0f6e56;">✓ Sem blend com proteína de soja</span>
-    <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2e1a;color:#5dcaa5;border:1px solid #0f6e56;">✓ Marcas reconhecidas no mercado</span>
-    <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2e1a;color:#5dcaa5;border:1px solid #0f6e56;">✓ Custo competitivo verificado</span>
+  <div class="filtros">
+    <span class="filtro-badge">✓ 100% soro do leite</span>
+    <span class="filtro-badge">✓ Sem blend com soja</span>
+    <span class="filtro-badge">✓ Marcas reconhecidas</span>
+    <span class="filtro-badge">✓ Custo verificado</span>
   </div>
   <div class="skeleton-wrap" id="skeleton">
     <div class="skeleton-card"></div>
@@ -203,12 +266,12 @@ footer a { color: var(--muted); }
   <div id="ranking-list" style="display:none"></div>
 </section>
 
-<!-- ─── Nota sobre preços ─── -->
+<!-- Nota preços -->
 <div class="nota-precos">
   <div class="nota-precos-inner">
     <div class="nota-icon">ℹ️</div>
     <div class="nota-texto">
-      <strong>Sobre os preços:</strong> os valores são coletados automaticamente do Mercado Livre a cada 6 horas e podem variar até o momento da compra. Se o preço que você encontrar no link for diferente, use o campo <strong>"preço diferente?"</strong> em cada produto para corrigir e recalcular o ranking com o valor real.
+      <strong>Sobre os preços:</strong> coletados do Mercado Livre a cada 6h e podem variar. Se o valor for diferente, clique no card para corrigir e o ranking recalcula na hora.
     </div>
   </div>
 </div>
@@ -216,7 +279,7 @@ footer a { color: var(--muted); }
 <footer>
   <p>Preços coletados automaticamente do Mercado Livre a cada 6 horas.</p>
   <p>Os links são de afiliado — ao comprar, você apoia o site sem pagar nada a mais. 🤝</p>
-  <p style="margin-top:8px">
+  <p style="margin-top:6px">
     <a href="#sobre" onclick="abrirModal('sobre')">Sobre</a> ·
     <a href="#" onclick="abrirModal('sugerir')">Sugerir produto</a> ·
     <a href="#" onclick="abrirModal('contato')">Contato</a>
@@ -225,8 +288,8 @@ footer a { color: var(--muted); }
 
 <!-- Modal -->
 <div id="modal-overlay" onclick="fecharModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:20px;">
-  <div id="modal-box" onclick="event.stopPropagation()" style="background:#18191d;border:1px solid #2e2f35;border-radius:12px;padding:28px;max-width:480px;width:100%;position:relative;">
-    <button onclick="fecharModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:#7a7c84;font-size:20px;cursor:pointer;">✕</button>
+  <div id="modal-box" onclick="event.stopPropagation()" style="background:#18191d;border:1px solid #2e2f35;border-radius:12px;padding:24px;max-width:480px;width:100%;position:relative;">
+    <button onclick="fecharModal()" style="position:absolute;top:10px;right:14px;background:none;border:none;color:#7a7c84;font-size:18px;cursor:pointer;">✕</button>
     <div id="modal-content"></div>
   </div>
 </div>
@@ -249,7 +312,9 @@ async function carregarDados() {
     wheys = await resp.json();
     document.getElementById('skeleton').style.display = 'none';
     document.getElementById('ranking-list').style.display = 'flex';
-    const agora = new Date(); document.getElementById('last-update-text').textContent = `Preços atualizados em ${agora.toLocaleDateString('pt-BR')} às ${agora.getHours()}h`;
+    const agora = new Date();
+    document.getElementById('last-update-text').textContent =
+      `${agora.toLocaleDateString('pt-BR')} às ${agora.getHours()}h`;
     renderizar();
   } catch (err) {
     console.error(err);
@@ -257,8 +322,7 @@ async function carregarDados() {
       <div class="error-msg">
         <strong>Não foi possível carregar os dados.</strong>
         Verifique a configuração do Supabase no código.
-      </div>
-    `;
+      </div>`;
   }
 }
 
@@ -288,12 +352,15 @@ function renderizar() {
   ordenadosCache = wheys
     .map(w => ({ ...w, ...calcularParaMeta(w, metaProt) }))
     .sort((a, b) => a.custoParaMeta - b.custoParaMeta);
-
   const container = document.getElementById('ranking-list');
   container.innerHTML = '';
   document.getElementById('btn-mais')?.remove();
-
   renderizarPagina();
+}
+
+function toggleCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  if (card) card.classList.toggle('open');
 }
 
 function renderizarPagina() {
@@ -303,69 +370,80 @@ function renderizarPagina() {
   const fatia  = ordenadosCache.slice(inicio, fim);
 
   fatia.forEach((w, i) => {
-    const i_global = inicio + i;
-    const pos        = inicio + i + 1;
-    const clase      = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-other';
-    const emoji      = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
-    const perc       = Math.round((w.prot_por_dose / w.dose_g) * 100);
-    const vlrKg      = w.vlr_por_kg_prot ? `R$${parseFloat(w.vlr_por_kg_prot).toFixed(2)}/kg prot` : '';
-    const dosesLabel = w.dosesNecessarias.toFixed(1) === '1.0' ? '1 dose' : `${w.dosesNecessarias.toFixed(1)} doses`;
-    const btnML      = w.link_ml
-      ? `<a href="${w.link_ml}" target="_blank" rel="noopener sponsored" class="btn-ml">Comprar no Mercado Livre →</a>`
+    const i_global    = inicio + i;
+    const pos         = inicio + i + 1;
+    const clase       = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : 'pos-other';
+    const emoji       = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+    const perc        = Math.round((w.prot_por_dose / w.dose_g) * 100);
+    const dosesLabel  = w.dosesNecessarias.toFixed(1) === '1.0' ? '1 dose' : `${w.dosesNecessarias.toFixed(1)} doses`;
+    const btnML       = w.link_ml
+      ? `<a href="${w.link_ml}" target="_blank" rel="noopener sponsored" class="btn-ml">Mercado Livre →</a>`
       : `<span class="btn-ml-soon">Link em breve</span>`;
     const valorCorrigido = precosCorrigidos[w.id] ? precosCorrigidos[w.id].toFixed(2) : '';
+    const vlrKg = w.vlr_por_kg_prot ? `R$${parseFloat(w.vlr_por_kg_prot).toFixed(2)}/kg prot` : '';
 
     container.innerHTML += `
-      <div class="card" style="animation-delay:${i_global * 0.05}s">
+      <div class="card" id="card-${w.id}" style="animation-delay:${i_global * 0.05}s" onclick="toggleCard(${w.id})">
+
         <div class="card-pos ${clase}">${emoji}</div>
+
         <div class="card-info">
-          <div class="card-name">${w.nome} · ${w.marca} · ${w.sabor || ''}</div>
-          <div class="card-brand">${w.peso_g}g · ${w.prot_por_dose}g prot/${w.dose_g}g dose</div>
-          <div class="card-pills">
-            <span class="pill highlight">${perc}% proteína</span>
-            <span class="pill">${vlrKg}</span>
-            <span class="pill">${w.num_doses} doses no pote</span>
+          <div class="card-name">${w.nome} · ${w.marca}</div>
+          <div class="card-sub">
+            <span class="pill highlight">${perc}% prot</span>
+            <span class="pill">${w.prot_por_dose}g/${w.dose_g}g dose</span>
+            <span class="pill">${w.num_doses} doses</span>
+            ${w.sabor ? `<span class="pill">${w.sabor}</span>` : ''}
           </div>
         </div>
-        <div class="card-right">
-          <div>
-            <div class="card-price">R$${w.preco.toFixed(2)}</div>
-            <div class="card-price-sub">preço do pote</div>
-            <div class="preco-corrigir">
-              <label for="preco-${w.id}">preço diferente?</label>
-              <input
-                id="preco-${w.id}"
-                type="number"
-                class="preco-input"
-                placeholder="corrigir"
-                value="${valorCorrigido}"
-                step="0.01" min="1"
-                onchange="corrigirPreco(${w.id}, this.value)"
-              />
-            </div>
+
+        <div class="card-right" onclick="event.stopPropagation()">
+          <div class="pote-block">
+            <div class="pote-valor">R$${w.preco.toFixed(2)}</div>
+            <div class="pote-label">pote ${w.peso_g}g</div>
           </div>
-          <div class="card-meta-block">
-            <div class="card-meta-label">Para ${metaProt}g de proteína</div>
-            <div class="card-meta-detail">${w.gPoNecessario}g de pó · ${dosesLabel}</div>
-            <div class="card-meta-custo">R$${w.custoParaMeta.toFixed(2)}</div>
-            <div class="card-meta-custo-sub">custo real da dose</div>
+          <div class="meta-block">
+            <div class="meta-label">p/ ${metaProt}g prot</div>
+            <div class="meta-custo">R$${w.custoParaMeta.toFixed(2)}</div>
+            <div class="meta-sub">${dosesLabel}</div>
           </div>
-          <div>${btnML}</div>
+          ${btnML}
         </div>
+
+        <!-- Expansão com detalhes + corrigir preço -->
+        <div class="card-expand" onclick="event.stopPropagation()">
+          <div class="expand-detail">
+            <strong>${w.gPoNecessario}g de pó</strong> necessários · ${vlrKg}
+          </div>
+          <div class="preco-corrigir">
+            <label for="preco-${w.id}">preço diferente?</label>
+            <input
+              id="preco-${w.id}"
+              type="number"
+              class="preco-input"
+              placeholder="corrigir R$"
+              value="${valorCorrigido}"
+              step="0.01" min="1"
+              onchange="corrigirPreco(${w.id}, this.value)"
+            />
+          </div>
+        </div>
+
+        <div style="grid-column:1/-1;text-align:center;padding-top:2px;">
+          <span class="expand-hint">▾ detalhes</span>
+        </div>
+
       </div>
     `;
   });
 
-  // Remove botão antigo se existir
   document.getElementById('btn-mais')?.remove();
-
-  // Adiciona botão se ainda houver mais
   if (fim < ordenadosCache.length) {
     const btn = document.createElement('button');
     btn.id = 'btn-mais';
     btn.textContent = `Ver mais ${Math.min(POR_PAGINA, ordenadosCache.length - fim)} wheys`;
     btn.onclick = () => { paginaAtual++; renderizarPagina(); };
-    btn.style.cssText = 'width:100%;padding:14px;background:transparent;border:1px solid #2e2f35;border-radius:12px;color:#7a7c84;font-size:14px;font-family:"DM Sans",sans-serif;cursor:pointer;margin-top:4px;transition:border-color .2s,color .2s;';
+    btn.style.cssText = 'width:100%;padding:12px;background:transparent;border:1px solid #2e2f35;border-radius:12px;color:#7a7c84;font-size:13px;font-family:"DM Sans",sans-serif;cursor:pointer;margin-top:4px;transition:border-color .2s,color .2s;';
     btn.onmouseover = () => { btn.style.borderColor = '#c8f135'; btn.style.color = '#c8f135'; };
     btn.onmouseout  = () => { btn.style.borderColor = '#2e2f35'; btn.style.color = '#7a7c84'; };
     container.after(btn);
@@ -396,54 +474,38 @@ function toggleSabia(card) {
 function abrirModal(tipo) {
   const conteudos = {
     sobre: `
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Sobre o WheyRank</h2>
-      <p style="color:#7a7c84;font-size:14px;line-height:1.7;">O WheyRank compara o <strong style="color:#e8e9ec">custo real por grama de proteína</strong> de diferentes wheys — não só o preço do pote.</p>
-      <p style="color:#7a7c84;font-size:14px;line-height:1.7;margin-top:10px;">Os preços são coletados automaticamente do Mercado Livre a cada 6 horas via API oficial. Podem haver pequenas variações no momento da compra.</p>
-      <p style="color:#7a7c84;font-size:14px;line-height:1.7;margin-top:10px;">Os links são de afiliado — ao comprar pelo site, você apoia o projeto sem pagar nada a mais. 🤝</p>
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#c8f135;margin-bottom:10px;">Sobre o WheyRank</h2>
+      <p style="color:#7a7c84;font-size:14px;line-height:1.7;">O WheyRank compara o <strong style="color:#e8e9ec">custo real por grama de proteína</strong> — não só o preço do pote.</p>
+      <p style="color:#7a7c84;font-size:14px;line-height:1.7;margin-top:8px;">Os preços são coletados do Mercado Livre a cada 6 horas. Os links são de afiliado — você apoia o projeto sem pagar nada a mais. 🤝</p>
     `,
     sugerir: `
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Sugerir produto</h2>
-      <p style="color:#7a7c84;font-size:14px;margin-bottom:8px;">Conhece um whey que deveria estar no ranking? Manda o nome e a marca.</p>
-      <p style="color:#7a7c84;font-size:12px;margin-bottom:16px;padding:8px 12px;background:#222328;border-radius:8px;">Os produtos precisam ser 100% soro do leite, sem adição de proteína de soja, de marcas estabelecidas no mercado.</p>
-      <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:10px;">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#c8f135;margin-bottom:10px;">Sugerir produto</h2>
+      <p style="color:#7a7c84;font-size:13px;margin-bottom:8px;">Conhece um whey que deveria estar no ranking? Manda o nome e a marca.</p>
+      <p style="color:#7a7c84;font-size:11px;margin-bottom:14px;padding:8px 10px;background:#222328;border-radius:8px;">Precisam ser 100% soro do leite, sem soja, de marcas estabelecidas.</p>
+      <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:8px;">
         <input type="hidden" name="tipo" value="sugestão de produto">
-        <input name="produto" placeholder="Ex: Optimum Nutrition Gold Standard" required
-          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
-        <input name="email" type="email" placeholder="Seu email (opcional)"
-          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
-        <button type="submit"
-          style="padding:10px;background:#c8f135;color:#111;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:14px;">
-          Enviar sugestão
-        </button>
+        <input name="produto" placeholder="Ex: Optimum Nutrition Gold Standard" required style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;">
+        <input name="email" type="email" placeholder="Seu email (opcional)" style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;">
+        <button type="submit" style="padding:9px;background:#c8f135;color:#111;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:13px;">Enviar sugestão</button>
       </form>
     `,
     contato: `
-      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#c8f135;margin-bottom:12px;">Contato</h2>
-      <p style="color:#7a7c84;font-size:14px;margin-bottom:16px;">Dúvidas, parcerias ou feedback:</p>
-      <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:10px;">
+      <h2 style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#c8f135;margin-bottom:10px;">Contato</h2>
+      <p style="color:#7a7c84;font-size:13px;margin-bottom:14px;">Dúvidas, parcerias ou feedback:</p>
+      <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST" style="display:flex;flex-direction:column;gap:8px;">
         <input type="hidden" name="tipo" value="contato">
-        <input name="nome" placeholder="Seu nome" required
-          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
-        <input name="email" type="email" placeholder="Seu email" required
-          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;">
-        <textarea name="mensagem" placeholder="Mensagem" rows="4" required
-          style="padding:10px 12px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:14px;font-family:'DM Sans',sans-serif;resize:vertical;"></textarea>
-        <button type="submit"
-          style="padding:10px;background:#c8f135;color:#111;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:14px;">
-          Enviar mensagem
-        </button>
+        <input name="nome" placeholder="Seu nome" required style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;">
+        <input name="email" type="email" placeholder="Seu email" required style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;">
+        <textarea name="mensagem" placeholder="Mensagem" rows="3" required style="padding:9px 11px;background:#222328;border:1px solid #2e2f35;border-radius:8px;color:#e8e9ec;font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical;"></textarea>
+        <button type="submit" style="padding:9px;background:#c8f135;color:#111;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:13px;">Enviar mensagem</button>
       </form>
     `
   };
   document.getElementById('modal-content').innerHTML = conteudos[tipo];
-  const overlay = document.getElementById('modal-overlay');
-  overlay.style.display = 'flex';
+  document.getElementById('modal-overlay').style.display = 'flex';
 }
 
-function fecharModal() {
-  document.getElementById('modal-overlay').style.display = 'none';
-}
-
+function fecharModal() { document.getElementById('modal-overlay').style.display = 'none'; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
 </script>
 </body>
