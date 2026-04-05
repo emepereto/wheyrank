@@ -2,6 +2,14 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-V90KSFVZ2G"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-V90KSFVZ2G');
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Melhor Whey Protein 2026: Ranking Custo Benefício (Atualizado)</title>
 <meta name="description" content="Compare o custo benefício real dos melhores wheys protein do Brasil. Calcule o valor por grama de proteína e ache onde comprar mais barato.">
@@ -458,6 +466,80 @@ function atualizarMeta(valor) {
   if (wheys.length > 0) renderizar();
 }
 
+
+// ─── Analytics: eventos customizados ───────────────────────────────────────
+
+// Clique no botão Mercado Livre — via delegação no ranking-list
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn-ml');
+  if (!btn) return;
+  // Pega o nome do whey a partir do card pai
+  const card = btn.closest('.card');
+  const nome = card ? card.querySelector('.card-name')?.textContent?.trim() : 'desconhecido';
+  gtag('event', 'clique_mercado_livre', {
+    event_category: 'compra',
+    event_label: nome,
+    value: 1
+  });
+});
+
+// Interação com o slider de meta de proteína
+document.getElementById('meta-prot').addEventListener('change', function() {
+  gtag('event', 'ajuste_meta_proteina', {
+    event_category: 'engajamento',
+    event_label: this.value + 'g'
+  });
+});
+
+// Rolagem — dispara em 25%, 50%, 75%, 90%
+(function() {
+  const marcos = [25, 50, 75, 90];
+  const disparados = new Set();
+  window.addEventListener('scroll', function() {
+    const pct = Math.round(
+      (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+    );
+    marcos.forEach(m => {
+      if (pct >= m && !disparados.has(m)) {
+        disparados.add(m);
+        gtag('event', 'scroll_profundidade', {
+          event_category: 'rolagem',
+          event_label: m + '%'
+        });
+      }
+    });
+  }, { passive: true });
+})();
+
+// Abertura da seção "Você sabia?"
+const sabiaBtnOrig = window.toggleSabia;
+window.toggleSabia = function(card) {
+  const conteudo = document.getElementById('sabia-conteudo');
+  const jaFechado = conteudo.style.maxHeight === '0px' || conteudo.style.maxHeight === '';
+  if (jaFechado) {
+    gtag('event', 'abriu_voce_sabia', { event_category: 'engajamento' });
+  }
+  sabiaBtnOrig(card);
+};
+
+// Clique em "Ver mais wheys"
+document.addEventListener('click', function(e) {
+  if (e.target.id === 'btn-mais') {
+    gtag('event', 'ver_mais_wheys', { event_category: 'engajamento' });
+  }
+});
+
+// Correção de preço manual
+document.addEventListener('change', function(e) {
+  if (e.target.classList.contains('preco-input') && e.target.value) {
+    gtag('event', 'correcao_preco', {
+      event_category: 'engajamento',
+      event_label: 'preco_corrigido'
+    });
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────────────
 carregarDados();
 
 function toggleSabia(card) {
