@@ -212,6 +212,15 @@ footer a { color: var(--muted); }
 
   .btn-ml { font-size: 10px; padding: 5px 9px; }
 }
+
+/* ─── Seção artigos ─── */
+.artigos-section { max-width: 900px; margin: 0 auto 16px; padding: 0 24px; }
+.artigos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.artigo-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; text-decoration: none; display: block; transition: border-color .2s, transform .15s; }
+.artigo-card:hover { border-color: rgba(200,241,53,0.4); transform: translateY(-1px); }
+.artigo-tag { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 5px; }
+.artigo-titulo { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
+.artigo-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -300,6 +309,39 @@ footer a { color: var(--muted); }
     <div class="nota-texto">
       <strong>Sobre os preços:</strong> coletados do Mercado Livre a cada 6h e podem variar. Se o valor for diferente, clique no card para corrigir e o ranking recalcula na hora.
     </div>
+  </div>
+</div>
+
+
+<!-- Artigos -->
+<div class="artigos-section">
+  <div class="section-title" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--muted);margin-bottom:10px;">SAIBA MAIS — GUIAS E COMPARATIVOS</div>
+  <div class="artigos-grid">
+    <a href="/artigos/como-escolher-whey-proteina-custo-beneficio" class="artigo-card">
+      <div class="artigo-tag">Guia de compra</div>
+      <div class="artigo-titulo">Como escolher whey pelo custo real de proteína</div>
+      <div class="artigo-desc">Aprenda o cálculo que o WheyRank usa e pare de pagar mais caro sem perceber.</div>
+    </a>
+    <a href="/artigos/como-ler-rotulo-whey-protein" class="artigo-card">
+      <div class="artigo-tag">Educação nutricional</div>
+      <div class="artigo-titulo">Como ler o rótulo do whey protein</div>
+      <div class="artigo-desc">O que cada campo da tabela nutricional significa e quais ingredientes são sinal de alerta.</div>
+    </a>
+    <a href="/artigos/cuidado-whey-com-muito-carboidrato" class="artigo-card">
+      <div class="artigo-tag">Alerta de consumo</div>
+      <div class="artigo-titulo">Cuidado com whey com muito carboidrato</div>
+      <div class="artigo-desc">Como identificar produtos que parecem rendosos mas entregam menos proteína por real.</div>
+    </a>
+    <a href="/artigos/laudo-whey-protein-como-verificar" class="artigo-card">
+      <div class="artigo-tag">Qualidade e segurança</div>
+      <div class="artigo-titulo">Laudo de whey: como verificar e quais marcas têm</div>
+      <div class="artigo-desc">O que é amino spiking, onde checar laudos e a situação das principais marcas do mercado.</div>
+    </a>
+    <a href="/artigos/whey-importado-vs-nacional" class="artigo-card">
+      <div class="artigo-tag">Comparativo</div>
+      <div class="artigo-titulo">Whey importado vs nacional: vale a diferença?</div>
+      <div class="artigo-desc">Comparamos custo real, certificações e qualidade. A resposta vai te surpreender.</div>
+    </a>
   </div>
 </div>
 
