@@ -1,6 +1,6 @@
 {
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/artigos/(.*)", "dest": "/artigos/$1.html" }
+    { "src": "/artigos/(.*)", "dest": "/artigos/$1" }
   ]
 }
