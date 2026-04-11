@@ -263,8 +263,12 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         ltype = item.get("shipping", {}).get("logistic_type", "?")
         print(f"    R${preco:.2f} | rep={rep.get('level','?')} | logistic={ltype} | score={item['_score']} | vendas={rep.get('total_vendas','?')}")
 
+        # Descobrir o campo correto do item_id (pode ser "id", "item_id" ou "catalog_listing_id")
+        item_id = item.get("id") or item.get("item_id") or item.get("catalog_listing_id")
+        print(f"    Chaves do item: {list(item.keys())[:8]}")  # DEBUG — remove após confirmar
+
         # Busca nota do produto usando o item_id do melhor anúncio
-        nota = buscar_nota_produto(item["id"], mlb_produto_id, access_token)
+        nota = buscar_nota_produto(item_id, mlb_produto_id, access_token) if item_id else None
 
         return preco, True, "ok", nota
 
