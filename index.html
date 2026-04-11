@@ -221,6 +221,11 @@ footer a { color: var(--muted); }
 .artigo-tag { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 5px; }
 .artigo-titulo { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 4px; }
 .artigo-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* ─── Nota ML ─── */
+.nota-ml { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: #ffc947; white-space: nowrap; }
+.nota-ml svg { width: 11px; height: 11px; fill: #ffc947; flex-shrink: 0; }
+.nota-ml.sem-nota { display: none; }
 </style>
 </head>
 <body>
@@ -322,17 +327,17 @@ footer a { color: var(--muted); }
       <div class="artigo-titulo">Como escolher whey pelo custo real de proteína</div>
       <div class="artigo-desc">Aprenda o cálculo que o WheyRank usa e pare de pagar mais caro sem perceber.</div>
     </a>
-    <a href="/artigos/como-ler-rotulo-de-whey" class="artigo-card">
+    <a href="/artigos/como-ler-rotulo-whey-protein" class="artigo-card">
       <div class="artigo-tag">Educação nutricional</div>
       <div class="artigo-titulo">Como ler o rótulo do whey protein</div>
       <div class="artigo-desc">O que cada campo da tabela nutricional significa e quais ingredientes são sinal de alerta.</div>
     </a>
-    <a href="/artigos/cuidado-com-whey-com-muito-carbo" class="artigo-card">
+    <a href="/artigos/cuidado-whey-com-muito-carboidrato" class="artigo-card">
       <div class="artigo-tag">Alerta de consumo</div>
       <div class="artigo-titulo">Cuidado com whey com muito carboidrato</div>
       <div class="artigo-desc">Como identificar produtos que parecem rendosos mas entregam menos proteína por real.</div>
     </a>
-    <a href="/artigos/laudo-whey-como-verificar" class="artigo-card">
+    <a href="/artigos/laudo-whey-protein-como-verificar" class="artigo-card">
       <div class="artigo-tag">Qualidade e segurança</div>
       <div class="artigo-titulo">Laudo de whey: como verificar e quais marcas têm</div>
       <div class="artigo-desc">O que é amino spiking, onde checar laudos e a situação das principais marcas do mercado.</div>
@@ -452,7 +457,10 @@ function renderizarPagina() {
         <div class="card-pos ${clase}">${emoji}</div>
 
         <div class="card-info">
-          <div class="card-name">${w.nome} · ${w.marca}${w.sabor ? ` · ${w.sabor}` : ''}</div>
+          <div class="card-name" style="display:flex;align-items:center;gap:6px;">
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${w.nome} · ${w.marca}${w.sabor ? ` · ${w.sabor}` : ''}</span>
+            ${w.nota ? `<span class="nota-ml"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>${w.nota.toFixed(1)}</span>` : ''}
+          </div>
           <div class="card-pills">
             <span class="pill highlight">${perc}% prot</span>
             <span class="pill">${w.prot_por_dose}g / ${w.dose_g}g dose</span>
