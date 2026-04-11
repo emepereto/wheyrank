@@ -1,9 +1,10 @@
 """
-WHEYRANK — Scraper v10 (melhorado)
+WHEYRANK — Scraper v11
 ====================================
 - Score composto replica ranking do ML
 - Logs completos + renovação de token no meio da execução
 - Sleep seguro para evitar rate limit
+- Coleta nota (rating) do produto no ML
 """
 
 import os
@@ -95,22 +96,26 @@ def buscar_wheys():
     return [w for w in resp.json() if w.get("ml_item_id")]
 
 
-def salvar_preco(whey_id, preco, url_produto):
+def salvar_preco(whey_id, preco, url_produto, nota=None):
     requests.delete(
         f"{SUPABASE_URL}/rest/v1/precos",
         headers=HEADERS_SUPA,
         params={"whey_id": f"eq.{whey_id}"},
     )
+    payload = {
+        "whey_id":     whey_id,
+        "plataforma":  "mercadolivre",
+        "preco":       preco,
+        "url_produto": url_produto,
+        "coletado_em": datetime.utcnow().isoformat(),
+    }
+    if nota is not None:
+        payload["nota"] = nota
+
     resp = requests.post(
         f"{SUPABASE_URL}/rest/v1/precos",
         headers=HEADERS_SUPA,
-        json={
-            "whey_id":     whey_id,
-            "plataforma":  "mercadolivre",
-            "preco":       preco,
-            "url_produto": url_produto,
-            "coletado_em": datetime.utcnow().isoformat(),
-        },
+        json=payload,
     )
     return resp.status_code in (200, 201)
 
@@ -150,6 +155,33 @@ def buscar_reputacao(seller_id, access_token):
     result = {"level": "", "total_vendas": 0}
     _cache_reputacao[seller_id] = result
     return result
+
+# ── Nota do produto ──────────────────────────────────────────
+
+def buscar_nota_produto(mlb_produto_id, access_token):
+    """
+    Busca a nota/rating do produto no catálogo do ML.
+    Endpoint: GET /products/{product_id}
+    Retorna float com a nota (ex: 4.7) ou None se não disponível.
+    """
+    try:
+        resp = requests.get(
+            f"https://api.mercadolibre.com/products/{mlb_produto_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            dados = resp.json()
+            # A nota fica em reviews.rating_average
+            reviews = dados.get("reviews", {})
+            nota = reviews.get("rating_average")
+            total = reviews.get("total", 0)
+            if nota and total > 0:
+                print(f"    Nota: {nota:.1f} ({total} avaliações)")
+                return round(float(nota), 1)
+    except Exception as e:
+        print(f"    Erro ao buscar nota: {e}")
+    return None
 
 # ── Score ────────────────────────────────────────────────────
 
@@ -194,13 +226,13 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         )
 
         if resp.status_code == 401:
-            return None, False, "token_expirado"
+            return None, False, "token_expirado", None
         if resp.status_code != 200:
-            return None, False, f"erro_{resp.status_code}"
+            return None, False, f"erro_{resp.status_code}", None
 
         resultados = resp.json().get("results", [])
         if not resultados:
-            return None, False, "sem_resultados"
+            return None, False, "sem_resultados", None
 
         avaliados = []
         for item in resultados:
@@ -208,7 +240,7 @@ def buscar_preco_ml(mlb_produto_id, access_token):
             # Remove apenas reputação muito ruim
             if rep["level"] in ("1_red", "2_orange"):
                 continue
-            score       = calcular_score(item, rep)
+            score          = calcular_score(item, rep)
             item["_score"] = score
             avaliados.append(item)
             time.sleep(0.05)  # Rate limit seguro
@@ -229,10 +261,14 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         rep   = _cache_reputacao.get(item["seller_id"], {})
         ltype = item.get("shipping", {}).get("logistic_type", "?")
         print(f"    R${preco:.2f} | rep={rep.get('level','?')} | logistic={ltype} | score={item['_score']} | vendas={rep.get('total_vendas','?')}")
-        return preco, True, "ok"
+
+        # Busca nota do produto
+        nota = buscar_nota_produto(mlb_produto_id, access_token)
+
+        return preco, True, "ok", nota
 
     except Exception as e:
-        return None, False, f"erro: {e}"
+        return None, False, f"erro: {e}", None
 
 # ── Main ─────────────────────────────────────────────────────
 
@@ -261,19 +297,20 @@ def main():
         label = f"{w['marca']} {w.get('nome','')} {w.get('sabor','')}"
         print(f">> {label} ({w['ml_item_id']})")
 
-        preco, disponivel, motivo = buscar_preco_ml(w["ml_item_id"], access_token)
+        preco, disponivel, motivo, nota = buscar_preco_ml(w["ml_item_id"], access_token)
 
         # Tenta renovar token se expirou no meio
         if motivo == "token_expirado":
             access_token, refresh_token = renovar_token(refresh_token)
             if access_token:
-                preco, disponivel, motivo = buscar_preco_ml(w["ml_item_id"], access_token)
+                preco, disponivel, motivo, nota = buscar_preco_ml(w["ml_item_id"], access_token)
 
         if disponivel and preco:
             url = f"https://www.mercadolivre.com.br/p/{w['ml_item_id']}"
-            ok  = salvar_preco(w["id"], preco, url)
+            ok  = salvar_preco(w["id"], preco, url, nota)
             marcar_disponibilidade(w["id"], True)
-            print(f"  {'OK' if ok else 'ERRO SUPABASE'} R${preco:.2f}")
+            nota_str = f" | nota={nota}" if nota else ""
+            print(f"  {'OK' if ok else 'ERRO SUPABASE'} R${preco:.2f}{nota_str}")
             if ok: sucessos += 1
             else:  erros += 1
         elif motivo == "sem_resultados":
