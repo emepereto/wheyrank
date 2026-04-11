@@ -158,27 +158,28 @@ def buscar_reputacao(seller_id, access_token):
 
 # ── Nota do produto ──────────────────────────────────────────
 
-def buscar_nota_produto(mlb_produto_id, access_token):
+def buscar_nota_produto(item_id, mlb_produto_id, access_token):
     """
-    Busca a nota/rating do produto no catálogo do ML.
-    Endpoint: GET /products/{product_id}
+    Busca a nota/rating via endpoint de reviews do ML.
+    Endpoint: GET /reviews/item/{item_id}?catalog_product_id={product_id}
     Retorna float com a nota (ex: 4.7) ou None se não disponível.
     """
     try:
         resp = requests.get(
-            f"https://api.mercadolibre.com/products/{mlb_produto_id}",
+            f"https://api.mercadolibre.com/reviews/item/{item_id}",
             headers={"Authorization": f"Bearer {access_token}"},
+            params={"catalog_product_id": mlb_produto_id},
             timeout=10,
         )
         if resp.status_code == 200:
             dados = resp.json()
-            # A nota fica em reviews.rating_average
-            reviews = dados.get("reviews", {})
-            nota = reviews.get("rating_average")
-            total = reviews.get("total", 0)
+            nota  = dados.get("rating_average")
+            total = dados.get("paging", {}).get("total", 0)
             if nota and total > 0:
                 print(f"    Nota: {nota:.1f} ({total} avaliações)")
                 return round(float(nota), 1)
+            else:
+                print(f"    Sem avaliações")
     except Exception as e:
         print(f"    Erro ao buscar nota: {e}")
     return None
@@ -262,8 +263,8 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         ltype = item.get("shipping", {}).get("logistic_type", "?")
         print(f"    R${preco:.2f} | rep={rep.get('level','?')} | logistic={ltype} | score={item['_score']} | vendas={rep.get('total_vendas','?')}")
 
-        # Busca nota do produto
-        nota = buscar_nota_produto(mlb_produto_id, access_token)
+        # Busca nota do produto usando o item_id do melhor anúncio
+        nota = buscar_nota_produto(item["id"], mlb_produto_id, access_token)
 
         return preco, True, "ok", nota
 
