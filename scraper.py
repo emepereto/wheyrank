@@ -150,22 +150,33 @@ def carregar_cache_reputacao():
         print(f"  Aviso: cache reputação não carregado: {e}")
 
 
-def salvar_cache_reputacao(seller_id, result):
-    """Salva reputação nova no Supabase para reusar na próxima execução."""
+def salvar_cache_reputacao_bulk():
+    """Salva toda a reputação coletada no Supabase de uma vez só no final."""
+    if not _cache_reputacao:
+        return
+    payload = [
+        {
+            "seller_id":    str(sid),
+            "level":        dados["level"],
+            "total_vendas": dados["total_vendas"],
+        }
+        for sid, dados in _cache_reputacao.items()
+        if dados.get("level")  # só salva entradas válidas
+    ]
+    if not payload:
+        return
     try:
         resp = requests.post(
             f"{SUPABASE_URL}/rest/v1/cache_reputacao",
             headers={**HEADERS_SUPA, "Prefer": "resolution=merge-duplicates,return=minimal"},
-            json={
-                "seller_id":    str(seller_id),
-                "level":        result["level"],
-                "total_vendas": result["total_vendas"],
-            },
+            json=payload,
         )
-        if resp.status_code not in (200, 201, 204):
-            print(f"    Aviso cache: {resp.status_code} {resp.text[:120]}")
+        if resp.status_code in (200, 201, 204):
+            print(f"  Cache reputação: {len(payload)} vendedores salvos")
+        else:
+            print(f"  Aviso cache bulk: {resp.status_code} {resp.text[:200]}")
     except Exception as e:
-        print(f"    Erro cache: {e}")
+        print(f"  Erro ao salvar cache: {e}")
 
 
 def buscar_reputacao(seller_id, access_token):
@@ -186,7 +197,6 @@ def buscar_reputacao(seller_id, access_token):
                 "total_vendas": rep.get("transactions", {}).get("total", 0),
             }
             _cache_reputacao[seller_id] = result
-            salvar_cache_reputacao(seller_id, result)
             return result
     except Exception as e:
         print(f"    Erro reputação seller {seller_id}: {e}")
@@ -376,6 +386,9 @@ def main():
             print(f"  Falha: {motivo}")
             erros += 1
 
+
+    # Salva cache de reputação no Supabase para acelerar próximas execuções
+    salvar_cache_reputacao_bulk()
 
     print("\n" + "=" * 52)
     print(f"Atualizados: {sucessos} | Sem estoque: {sem_estoque} | Erros: {erros}")
