@@ -11,6 +11,7 @@ import os
 import time
 import requests
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
@@ -274,19 +275,24 @@ def buscar_preco_ml(mlb_produto_id, access_token):
             return None, False, "sem_resultados", None
 
         # Pré-filtra os 15 mais baratos antes de buscar reputação
-        # Evita chamadas desnecessárias para vendedores caros que nunca seriam escolhidos
         candidatos = sorted(resultados, key=lambda x: x["price"])[:15]
 
-        avaliados = []
-        for item in candidatos:
-            rep   = buscar_reputacao(item["seller_id"], access_token)
-            # Remove apenas reputação muito ruim
+        # Busca reputação em paralelo — reduz tempo de ~15 chamadas sequenciais para ~1
+        def avaliar_item(item):
+            rep = buscar_reputacao(item["seller_id"], access_token)
             if rep["level"] in ("1_red", "2_orange"):
-                continue
-            score          = calcular_score(item, rep)
+                return None
+            score = calcular_score(item, rep)
             item["_score"] = score
-            avaliados.append(item)
-            time.sleep(0.02)  # Rate limit seguro
+            return item
+
+        avaliados = []
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futuros = {executor.submit(avaliar_item, item): item for item in candidatos}
+            for futuro in as_completed(futuros):
+                resultado = futuro.result()
+                if resultado is not None:
+                    avaliados.append(resultado)
 
         # Fallback se todos foram filtrados
         if not avaliados:
@@ -370,7 +376,6 @@ def main():
             print(f"  Falha: {motivo}")
             erros += 1
 
-        time.sleep(0.3)
 
     print("\n" + "=" * 52)
     print(f"Atualizados: {sucessos} | Sem estoque: {sem_estoque} | Erros: {erros}")
