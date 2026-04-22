@@ -11,7 +11,6 @@ import os
 import time
 import requests
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
@@ -131,52 +130,6 @@ def marcar_disponibilidade(whey_id, disponivel):
 
 # ── Reputação ────────────────────────────────────────────────
 
-def carregar_cache_reputacao():
-    """Carrega reputações já conhecidas do Supabase (cache persistente entre execuções)."""
-    try:
-        resp = requests.get(
-            f"{SUPABASE_URL}/rest/v1/cache_reputacao",
-            headers=HEADERS_SUPA,
-            params={"select": "seller_id,level,total_vendas"},
-        )
-        if resp.status_code == 200:
-            for r in resp.json():
-                _cache_reputacao[r["seller_id"]] = {
-                    "level": r["level"],
-                    "total_vendas": r["total_vendas"],
-                }
-            print(f"  Cache reputação: {len(_cache_reputacao)} vendedores carregados")
-    except Exception as e:
-        print(f"  Aviso: cache reputação não carregado: {e}")
-
-
-def salvar_cache_reputacao_bulk():
-    """Salva toda a reputação coletada no Supabase de uma vez só no final."""
-    if not _cache_reputacao:
-        return
-    payload = [
-        {
-            "seller_id":    str(sid),
-            "level":        dados["level"],
-            "total_vendas": dados["total_vendas"],
-        }
-        for sid, dados in _cache_reputacao.items()
-        if dados.get("level")  # só salva entradas válidas
-    ]
-    if not payload:
-        return
-    try:
-        resp = requests.post(
-            f"{SUPABASE_URL}/rest/v1/cache_reputacao",
-            headers={**HEADERS_SUPA, "Prefer": "resolution=merge-duplicates,return=minimal"},
-            json=payload,
-        )
-        if resp.status_code in (200, 201, 204):
-            print(f"  Cache reputação: {len(payload)} vendedores salvos")
-        else:
-            print(f"  Aviso cache bulk: {resp.status_code} {resp.text[:200]}")
-    except Exception as e:
-        print(f"  Erro ao salvar cache: {e}")
 
 
 def buscar_reputacao(seller_id, access_token):
@@ -287,22 +240,14 @@ def buscar_preco_ml(mlb_produto_id, access_token):
         # Pré-filtra os 15 mais baratos antes de buscar reputação
         candidatos = sorted(resultados, key=lambda x: x["price"])[:15]
 
-        # Busca reputação em paralelo — reduz tempo de ~15 chamadas sequenciais para ~1
-        def avaliar_item(item):
+        avaliados = []
+        for item in candidatos:
             rep = buscar_reputacao(item["seller_id"], access_token)
             if rep["level"] in ("1_red", "2_orange"):
-                return None
-            score = calcular_score(item, rep)
+                continue
+            score          = calcular_score(item, rep)
             item["_score"] = score
-            return item
-
-        avaliados = []
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            futuros = {executor.submit(avaliar_item, item): item for item in candidatos}
-            for futuro in as_completed(futuros):
-                resultado = futuro.result()
-                if resultado is not None:
-                    avaliados.append(resultado)
+            avaliados.append(item)
 
         # Fallback se todos foram filtrados
         if not avaliados:
@@ -350,9 +295,6 @@ def main():
             access_token  = novo
             refresh_token = novo_r
 
-    # Carrega cache de reputação do Supabase (evita chamadas repetidas entre execuções)
-    carregar_cache_reputacao()
-
     wheys = buscar_wheys()
     print(f"Produtos: {len(wheys)}\n")
 
@@ -386,9 +328,6 @@ def main():
             print(f"  Falha: {motivo}")
             erros += 1
 
-
-    # Salva cache de reputação no Supabase para acelerar próximas execuções
-    salvar_cache_reputacao_bulk()
 
     print("\n" + "=" * 52)
     print(f"Atualizados: {sucessos} | Sem estoque: {sem_estoque} | Erros: {erros}")
