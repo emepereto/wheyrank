@@ -130,6 +130,41 @@ def marcar_disponibilidade(whey_id, disponivel):
 
 # ── Reputação ────────────────────────────────────────────────
 
+def carregar_cache_reputacao():
+    """Carrega reputações já conhecidas do Supabase (cache persistente entre execuções)."""
+    try:
+        resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/cache_reputacao",
+            headers=HEADERS_SUPA,
+            params={"select": "seller_id,level,total_vendas"},
+        )
+        if resp.status_code == 200:
+            for r in resp.json():
+                _cache_reputacao[r["seller_id"]] = {
+                    "level": r["level"],
+                    "total_vendas": r["total_vendas"],
+                }
+            print(f"  Cache reputação: {len(_cache_reputacao)} vendedores carregados")
+    except Exception as e:
+        print(f"  Aviso: cache reputação não carregado: {e}")
+
+
+def salvar_cache_reputacao(seller_id, result):
+    """Salva reputação nova no Supabase para reusar na próxima execução."""
+    try:
+        requests.post(
+            f"{SUPABASE_URL}/rest/v1/cache_reputacao",
+            headers={**HEADERS_SUPA, "Prefer": "resolution=merge-duplicates,return=minimal"},
+            json={
+                "seller_id":    str(seller_id),
+                "level":        result["level"],
+                "total_vendas": result["total_vendas"],
+            },
+        )
+    except Exception:
+        pass  # Cache é opcional, não deve quebrar o fluxo
+
+
 def buscar_reputacao(seller_id, access_token):
     if seller_id in _cache_reputacao:
         return _cache_reputacao[seller_id]
@@ -148,6 +183,7 @@ def buscar_reputacao(seller_id, access_token):
                 "total_vendas": rep.get("transactions", {}).get("total", 0),
             }
             _cache_reputacao[seller_id] = result
+            salvar_cache_reputacao(seller_id, result)
             return result
     except Exception as e:
         print(f"    Erro reputação seller {seller_id}: {e}")
@@ -295,6 +331,9 @@ def main():
         if novo:
             access_token  = novo
             refresh_token = novo_r
+
+    # Carrega cache de reputação do Supabase (evita chamadas repetidas entre execuções)
+    carregar_cache_reputacao()
 
     wheys = buscar_wheys()
     print(f"Produtos: {len(wheys)}\n")
