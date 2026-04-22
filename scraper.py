@@ -152,7 +152,7 @@ def carregar_cache_reputacao():
 def salvar_cache_reputacao(seller_id, result):
     """Salva reputação nova no Supabase para reusar na próxima execução."""
     try:
-        requests.post(
+        resp = requests.post(
             f"{SUPABASE_URL}/rest/v1/cache_reputacao",
             headers={**HEADERS_SUPA, "Prefer": "resolution=merge-duplicates,return=minimal"},
             json={
@@ -161,8 +161,10 @@ def salvar_cache_reputacao(seller_id, result):
                 "total_vendas": result["total_vendas"],
             },
         )
-    except Exception:
-        pass  # Cache é opcional, não deve quebrar o fluxo
+        if resp.status_code not in (200, 201, 204):
+            print(f"    Aviso cache: {resp.status_code} {resp.text[:120]}")
+    except Exception as e:
+        print(f"    Erro cache: {e}")
 
 
 def buscar_reputacao(seller_id, access_token):
