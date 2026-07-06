@@ -6,13 +6,16 @@ on:
     # a cada ~2 semanas mantém o cron do scraper ativo.
     - cron: "0 0 1,15 * *"
   workflow_dispatch:
- 
+
+permissions:
+  contents: write
+
 jobs:
   keep-alive:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
- 
+
       - name: Commit vazio para manter o repositório ativo
         run: |
           git config user.name "github-actions[bot]"
