@@ -1,0 +1,21 @@
+name: Keep Repo Alive
+on:
+  schedule:
+    # Todo dia 1 e 15 de cada mês. O GitHub desativa workflows agendados
+    # depois de 60 dias sem push no repositório, então um commit vazio
+    # a cada ~2 semanas mantém o cron do scraper ativo.
+    - cron: "0 0 1,15 * *"
+  workflow_dispatch:
+ 
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - name: Commit vazio para manter o repositório ativo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "chore: keep-alive commit"
+          git push
