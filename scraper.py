@@ -1,20 +1,24 @@
 """
-WHEYRANK — Scraper v12
+WHEYRANK — Scraper v13
 ====================================
-- Usa buy_box_winner do endpoint de catálogo (não requer permissão especial)
-- Logs completos + renovação de token no meio da execução
-- Coleta nota (rating) do produto no ML
+- Não depende mais da API autenticada do Mercado Livre para preço/nota
+  (os endpoints de catálogo /products/{id} e /products/{id}/items
+  retornam "access not granted by applications" para este app).
+- Lê a página pública do produto e extrai preço/nota do JSON-LD
+  (dados estruturados schema.org que o ML expõe para SEO/Google Shopping),
+  com fallback via regex no HTML.
+- Mantém a gravação no Supabase igual à versão anterior.
 """
 
 import os
+import re
+import json
 import time
 import requests
 from datetime import datetime
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
-ML_APP_ID    = os.environ.get("ML_APP_ID", "")
-ML_SECRET    = os.environ.get("ML_SECRET", "")
 
 HEADERS_SUPA = {
     "apikey":        SUPABASE_KEY,
@@ -23,65 +27,14 @@ HEADERS_SUPA = {
     "Prefer":        "return=representation",
 }
 
-_cache_reputacao = {}
-
-# ── Tokens ──────────────────────────────────────────────────
-
-def carregar_tokens():
-    try:
-        resp = requests.get(
-            f"{SUPABASE_URL}/rest/v1/config",
-            headers=HEADERS_SUPA,
-            params={"select": "chave,valor"},
-        )
-        dados = {r["chave"]: r["valor"] for r in resp.json()}
-        return dados.get("ml_access_token"), dados.get("ml_refresh_token")
-    except Exception as e:
-        print(f"  Erro ao carregar tokens: {e}")
-        return None, None
-
-
-def salvar_tokens(access_token, refresh_token):
-    for chave, valor in [("ml_access_token", access_token), ("ml_refresh_token", refresh_token)]:
-        resp = requests.patch(
-            f"{SUPABASE_URL}/rest/v1/config",
-            headers=HEADERS_SUPA,
-            params={"chave": f"eq.{chave}"},
-            json={"valor": valor},
-        )
-        if not resp.json():
-            requests.post(
-                f"{SUPABASE_URL}/rest/v1/config",
-                headers=HEADERS_SUPA,
-                json={"chave": chave, "valor": valor},
-            )
-
-
-def renovar_token(refresh_token):
-    print("  Renovando token...")
-    try:
-        resp = requests.post(
-            "https://api.mercadolibre.com/oauth/token",
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data={
-                "grant_type":    "refresh_token",
-                "client_id":     ML_APP_ID,
-                "client_secret": ML_SECRET,
-                "refresh_token": refresh_token,
-            },
-            timeout=15,
-        )
-        if resp.status_code == 200:
-            dados = resp.json()
-            novo_access  = dados["access_token"]
-            novo_refresh = dados.get("refresh_token", refresh_token)
-            salvar_tokens(novo_access, novo_refresh)
-            print("  Token renovado com sucesso")
-            return novo_access, novo_refresh
-        print(f"  Erro ao renovar token: {resp.status_code} {resp.text[:300]}")
-    except Exception as e:
-        print(f"  Erro ao renovar token: {e}")
-    return None, None
+HEADERS_PAGINA = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+}
 
 # ── Supabase ─────────────────────────────────────────────────
 
@@ -127,105 +80,126 @@ def marcar_disponibilidade(whey_id, disponivel):
         json={"disponivel": disponivel},
     )
 
-# ── Reputação (apenas para log informativo) ──────────────────
+# ── Extração de dados da página pública ───────────────────────
 
-def buscar_reputacao(seller_id, access_token):
-    if not seller_id:
-        return {"level": "", "total_vendas": 0}
-    if seller_id in _cache_reputacao:
-        return _cache_reputacao[seller_id]
-
-    try:
-        resp = requests.get(
-            f"https://api.mercadolibre.com/users/{seller_id}",
-            headers={"Authorization": f"Bearer {access_token}"},
-            timeout=10,
-        )
-        if resp.status_code == 200:
-            dados = resp.json()
-            rep   = dados.get("seller_reputation", {})
-            result = {
-                "level":       rep.get("level_id", ""),
-                "total_vendas": rep.get("transactions", {}).get("total", 0),
-            }
-            _cache_reputacao[seller_id] = result
-            return result
-    except Exception as e:
-        print(f"    Erro reputação seller {seller_id}: {e}")
-
-    result = {"level": "", "total_vendas": 0}
-    _cache_reputacao[seller_id] = result
-    return result
-
-# ── Nota do produto ──────────────────────────────────────────
-
-def buscar_nota_produto(item_id, mlb_produto_id, access_token):
+def extrair_dados_ld_json(html):
     """
-    Busca a nota/rating via endpoint de reviews do ML.
-    Endpoint: GET /reviews/item/{item_id}?catalog_product_id={product_id}
-    Retorna float com a nota (ex: 4.7) ou None se não disponível.
+    Procura blocos <script type="application/ld+json"> com @type "Product"
+    e extrai o preço (offers.price) e a nota média (aggregateRating.ratingValue).
     """
-    try:
-        resp = requests.get(
-            f"https://api.mercadolibre.com/reviews/item/{item_id}",
-            headers={"Authorization": f"Bearer {access_token}"},
-            params={"catalog_product_id": mlb_produto_id},
-            timeout=10,
-        )
-        if resp.status_code == 200:
-            dados = resp.json()
-            nota  = dados.get("rating_average")
-            total = dados.get("paging", {}).get("total", 0)
-            if nota and total > 0:
-                print(f"    Nota: {nota:.1f} ({total} avaliações)")
-                return round(float(nota), 1)
-            else:
-                print(f"    Sem avaliações")
-    except Exception as e:
-        print(f"    Erro ao buscar nota: {e}")
+    preco = None
+    nota = None
+
+    blocos = re.findall(
+        r'<script type="application/ld\+json">(.*?)</script>', html, re.DOTALL
+    )
+
+    for bloco in blocos:
+        try:
+            dados = json.loads(bloco.strip())
+        except Exception:
+            continue
+
+        candidatos = dados if isinstance(dados, list) else [dados]
+        for item in candidatos:
+            if not isinstance(item, dict):
+                continue
+
+            tipo = item.get("@type", "")
+            is_product = ("Product" in tipo) if isinstance(tipo, list) else (tipo == "Product")
+            if not is_product:
+                continue
+
+            offers = item.get("offers")
+            if isinstance(offers, list):
+                offers = offers[0] if offers else {}
+            if isinstance(offers, dict):
+                p = offers.get("price")
+                if p is not None:
+                    try:
+                        preco = float(p)
+                    except (TypeError, ValueError):
+                        pass
+
+            rating = item.get("aggregateRating")
+            if isinstance(rating, dict):
+                rv = rating.get("ratingValue")
+                if rv is not None:
+                    try:
+                        nota = round(float(rv), 1)
+                    except (TypeError, ValueError):
+                        pass
+
+    return preco, nota
+
+
+def extrair_preco_regex(html):
+    """
+    Fallback caso o JSON-LD não esteja presente na página.
+    Tenta capturar o preço de dois jeitos diferentes usados pelo ML.
+    """
+    m = re.search(r'"price"\s*:\s*"?(\d+(?:\.\d+)?)"?', html)
+    if m:
+        try:
+            return float(m.group(1))
+        except ValueError:
+            pass
+
+    m = re.search(
+        r'andes-money-amount__fraction["\'>]*>([\d.]+)<.*?andes-money-amount__cents["\'>]*>(\d+)<',
+        html,
+        re.DOTALL,
+    )
+    if m:
+        inteiro = m.group(1).replace(".", "")
+        centavos = m.group(2)
+        try:
+            return float(f"{inteiro}.{centavos}")
+        except ValueError:
+            pass
+
     return None
 
-# ── Busca de preço (via buy_box_winner do catálogo) ───────────
 
-def buscar_preco_ml(mlb_produto_id, access_token):
-    url = f"https://api.mercadolibre.com/products/{mlb_produto_id}"
+def pagina_indica_indisponivel(html):
+    padroes = [
+        r"produto sem estoque",
+        r"sem estoque",
+        r"compra indispon[íi]vel",
+        r"anúncio pausado",
+        r"este produto já foi vendido",
+    ]
+    for p in padroes:
+        if re.search(p, html, re.IGNORECASE):
+            return True
+    return False
+
+# ── Busca de preço (leitura da página pública) ────────────────
+
+def buscar_preco_ml(mlb_produto_id):
+    url = f"https://www.mercadolivre.com.br/p/{mlb_produto_id}"
     try:
-        resp = requests.get(
-            url,
-            headers={"Authorization": f"Bearer {access_token}"},
-            timeout=15,
-        )
+        resp = requests.get(url, headers=HEADERS_PAGINA, timeout=20, allow_redirects=True)
 
-        if resp.status_code == 401:
-            print(f"    [DEBUG] 401 em {url}")
-            print(f"    [DEBUG] Corpo da resposta: {resp.text[:300]}")
-            return None, False, "token_expirado", None
+        if resp.status_code == 404:
+            return None, False, "sem_resultados", None
         if resp.status_code != 200:
-            print(f"    [DEBUG] {resp.status_code} em {url}: {resp.text[:300]}")
+            print(f"    [DEBUG] {resp.status_code} em {url}: {resp.text[:200]}")
             return None, False, f"erro_{resp.status_code}", None
 
-        dados = resp.json()
-        status = dados.get("status")
+        html = resp.text
 
-        buy_box = dados.get("buy_box_winner")
-        if not buy_box:
-            # Produto pode estar sem oferta ativa (sem estoque no catálogo)
-            if status and status != "active":
-                return None, False, "sem_resultados", None
-            return None, False, "sem_buybox", None
-
-        item_id   = buy_box.get("item_id")
-        preco     = buy_box.get("price")
-        seller_id = buy_box.get("seller_id")
+        preco, nota = extrair_dados_ld_json(html)
+        if preco is None:
+            preco = extrair_preco_regex(html)
 
         if preco is None:
-            return None, False, "buybox_sem_preco", None
+            if pagina_indica_indisponivel(html):
+                return None, False, "sem_resultados", None
+            return None, False, "preco_nao_encontrado", None
 
-        preco = float(preco)
-        rep   = buscar_reputacao(seller_id, access_token)
-        print(f"    R${preco:.2f} | seller={seller_id} | rep={rep.get('level','?')} | vendas={rep.get('total_vendas','?')}")
-
-        nota = buscar_nota_produto(item_id, mlb_produto_id, access_token) if item_id else None
+        nota_str = f" | nota={nota}" if nota else ""
+        print(f"    R${preco:.2f}{nota_str}")
 
         return preco, True, "ok", nota
 
@@ -238,18 +212,6 @@ def main():
     print(f"\nIniciando: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
     print("=" * 52)
 
-    access_token, refresh_token = carregar_tokens()
-    if not access_token:
-        print("Tokens não encontrados.")
-        return
-
-    # Renova sempre antes de começar
-    if refresh_token:
-        novo, novo_r = renovar_token(refresh_token)
-        if novo:
-            access_token  = novo
-            refresh_token = novo_r
-
     wheys = buscar_wheys()
     print(f"Produtos: {len(wheys)}\n")
 
@@ -259,13 +221,7 @@ def main():
         label = f"{w['marca']} {w.get('nome','')} {w.get('sabor','')}"
         print(f">> {label} ({w['ml_item_id']})")
 
-        preco, disponivel, motivo, nota = buscar_preco_ml(w["ml_item_id"], access_token)
-
-        # Tenta renovar token se expirou no meio
-        if motivo == "token_expirado":
-            access_token, refresh_token = renovar_token(refresh_token)
-            if access_token:
-                preco, disponivel, motivo, nota = buscar_preco_ml(w["ml_item_id"], access_token)
+        preco, disponivel, motivo, nota = buscar_preco_ml(w["ml_item_id"])
 
         if disponivel and preco:
             url = f"https://www.mercadolivre.com.br/p/{w['ml_item_id']}"
@@ -275,7 +231,7 @@ def main():
             print(f"  {'OK' if ok else 'ERRO SUPABASE'} R${preco:.2f}{nota_str}")
             if ok: sucessos += 1
             else:  erros += 1
-        elif motivo in ("sem_resultados", "sem_buybox"):
+        elif motivo == "sem_resultados":
             marcar_disponibilidade(w["id"], False)
             print(f"  Sem resultados")
             sem_estoque += 1
@@ -283,6 +239,8 @@ def main():
             print(f"  Falha: {motivo}")
             erros += 1
 
+        # Pequena pausa para reduzir risco de bloqueio/rate limit
+        time.sleep(1.5)
 
     print("\n" + "=" * 52)
     print(f"Atualizados: {sucessos} | Sem estoque: {sem_estoque} | Erros: {erros}")
