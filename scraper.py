@@ -196,6 +196,18 @@ def buscar_preco_ml(mlb_produto_id):
         if preco is None:
             if pagina_indica_indisponivel(html):
                 return None, False, "sem_resultados", None
+
+            # DIAGNÓSTICO: mostra pistas de bloqueio anti-bot / captcha
+            titulo = re.search(r"<title[^>]*>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
+            titulo_str = titulo.group(1).strip()[:100] if titulo else "(sem title)"
+            lang = re.search(r'<html[^>]*lang="([^"]+)"', html, re.IGNORECASE)
+            lang_str = lang.group(1) if lang else "?"
+            tem_ldjson = "application/ld+json" in html
+            print(f"    [DEBUG] status={resp.status_code} lang={lang_str} title=\"{titulo_str}\" tem_ldjson={tem_ldjson} tamanho_html={len(html)}")
+            for termo in ["captcha", "robot", "human", "blocked", "acesso negado", "unusual traffic", "verifica"]:
+                if termo in html.lower():
+                    print(f"    [DEBUG] termo suspeito encontrado no HTML: '{termo}'")
+
             return None, False, "preco_nao_encontrado", None
 
         nota_str = f" | nota={nota}" if nota else ""
