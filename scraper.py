@@ -76,10 +76,11 @@ def renovar_token(refresh_token):
             dados = resp.json()
             novo_access  = dados["access_token"]
             novo_refresh = dados.get("refresh_token", refresh_token)
+            escopo       = dados.get("scope", "?")
             salvar_tokens(novo_access, novo_refresh)
-            print("  Token renovado com sucesso")
+            print(f"  Token renovado com sucesso (scope={escopo})")
             return novo_access, novo_refresh
-        print(f"  Erro ao renovar token: {resp.status_code} {resp.text[:100]}")
+        print(f"  Erro ao renovar token: {resp.status_code} {resp.text[:300]}")
     except Exception as e:
         print(f"  Erro ao renovar token: {e}")
     return None, None
@@ -129,8 +130,6 @@ def marcar_disponibilidade(whey_id, disponivel):
     )
 
 # ── Reputação ────────────────────────────────────────────────
-
-
 
 def buscar_reputacao(seller_id, access_token):
     if seller_id in _cache_reputacao:
@@ -220,17 +219,22 @@ def calcular_score(item, rep):
 # ── Busca de preço ───────────────────────────────────────────
 
 def buscar_preco_ml(mlb_produto_id, access_token):
+    url = f"https://api.mercadolibre.com/products/{mlb_produto_id}/items"
     try:
         resp = requests.get(
-            f"https://api.mercadolibre.com/products/{mlb_produto_id}/items",
+            url,
             headers={"Authorization": f"Bearer {access_token}"},
             params={"limit": 30},
             timeout=15,
         )
 
         if resp.status_code == 401:
+            # LOG DETALHADO — para diagnosticar a causa real do 401
+            print(f"    [DEBUG] 401 em {url}")
+            print(f"    [DEBUG] Corpo da resposta: {resp.text[:300]}")
             return None, False, "token_expirado", None
         if resp.status_code != 200:
+            print(f"    [DEBUG] {resp.status_code} em {url}: {resp.text[:300]}")
             return None, False, f"erro_{resp.status_code}", None
 
         resultados = resp.json().get("results", [])
