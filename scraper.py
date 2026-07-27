@@ -1,9 +1,8 @@
 """
-WHEYRANK — Scraper v11
+WHEYRANK — Scraper v12
 ====================================
-- Score composto replica ranking do ML
+- Usa buy_box_winner do endpoint de catálogo (não requer permissão especial)
 - Logs completos + renovação de token no meio da execução
-- Sleep seguro para evitar rate limit
 - Coleta nota (rating) do produto no ML
 """
 
@@ -76,9 +75,8 @@ def renovar_token(refresh_token):
             dados = resp.json()
             novo_access  = dados["access_token"]
             novo_refresh = dados.get("refresh_token", refresh_token)
-            escopo       = dados.get("scope", "?")
             salvar_tokens(novo_access, novo_refresh)
-            print(f"  Token renovado com sucesso (scope={escopo})")
+            print("  Token renovado com sucesso")
             return novo_access, novo_refresh
         print(f"  Erro ao renovar token: {resp.status_code} {resp.text[:300]}")
     except Exception as e:
@@ -129,9 +127,11 @@ def marcar_disponibilidade(whey_id, disponivel):
         json={"disponivel": disponivel},
     )
 
-# ── Reputação ────────────────────────────────────────────────
+# ── Reputação (apenas para log informativo) ──────────────────
 
 def buscar_reputacao(seller_id, access_token):
+    if not seller_id:
+        return {"level": "", "total_vendas": 0}
     if seller_id in _cache_reputacao:
         return _cache_reputacao[seller_id]
 
@@ -185,51 +185,18 @@ def buscar_nota_produto(item_id, mlb_produto_id, access_token):
         print(f"    Erro ao buscar nota: {e}")
     return None
 
-# ── Score ────────────────────────────────────────────────────
-
-def calcular_score(item, rep):
-    score = 0
-    tags  = item.get("tags", [])
-    ship  = item.get("shipping", {})
-    level = rep["level"]
-    total = rep["total_vendas"]
-
-    # Reputação (fator principal)
-    if level == "5_green":         score += 100
-    elif level == "4_light_green": score += 80
-    elif level == "3_yellow":      score += 40
-    else:                          score -= 50
-
-    # Logística
-    if ship.get("logistic_type") == "fulfillment": score += 70
-    if ship.get("free_shipping"):                  score += 40
-    if item.get("official_store_id"):              score += 50
-
-    # Volume de vendas
-    if total > 1000:   score += 40
-    elif total > 100:  score += 20
-    elif total > 10:   score += 10
-
-    # Qualidade do anúncio
-    if "good_quality_thumbnail" in tags: score += 5
-    if "good_quality_picture"   in tags: score += 5
-
-    return score
-
-# ── Busca de preço ───────────────────────────────────────────
+# ── Busca de preço (via buy_box_winner do catálogo) ───────────
 
 def buscar_preco_ml(mlb_produto_id, access_token):
-    url = f"https://api.mercadolibre.com/products/{mlb_produto_id}/items"
+    url = f"https://api.mercadolibre.com/products/{mlb_produto_id}"
     try:
         resp = requests.get(
             url,
             headers={"Authorization": f"Bearer {access_token}"},
-            params={"limit": 30},
             timeout=15,
         )
 
         if resp.status_code == 401:
-            # LOG DETALHADO — para diagnosticar a causa real do 401
             print(f"    [DEBUG] 401 em {url}")
             print(f"    [DEBUG] Corpo da resposta: {resp.text[:300]}")
             return None, False, "token_expirado", None
@@ -237,43 +204,27 @@ def buscar_preco_ml(mlb_produto_id, access_token):
             print(f"    [DEBUG] {resp.status_code} em {url}: {resp.text[:300]}")
             return None, False, f"erro_{resp.status_code}", None
 
-        resultados = resp.json().get("results", [])
-        if not resultados:
-            return None, False, "sem_resultados", None
+        dados = resp.json()
+        status = dados.get("status")
 
-        # Pré-filtra os 15 mais baratos antes de buscar reputação
-        candidatos = sorted(resultados, key=lambda x: x["price"])[:15]
+        buy_box = dados.get("buy_box_winner")
+        if not buy_box:
+            # Produto pode estar sem oferta ativa (sem estoque no catálogo)
+            if status and status != "active":
+                return None, False, "sem_resultados", None
+            return None, False, "sem_buybox", None
 
-        avaliados = []
-        for item in candidatos:
-            rep = buscar_reputacao(item["seller_id"], access_token)
-            if rep["level"] in ("1_red", "2_orange"):
-                continue
-            score          = calcular_score(item, rep)
-            item["_score"] = score
-            avaliados.append(item)
+        item_id   = buy_box.get("item_id")
+        preco     = buy_box.get("price")
+        seller_id = buy_box.get("seller_id")
 
-        # Fallback se todos foram filtrados
-        if not avaliados:
-            avaliados = candidatos
-            for item in avaliados:
-                item["_score"] = 0
+        if preco is None:
+            return None, False, "buybox_sem_preco", None
 
-        # Ordena por score, pega menor preço entre top terço
-        avaliados.sort(key=lambda x: -x["_score"])
-        top_n = max(1, len(avaliados) // 3)
-        top   = avaliados[:top_n]
-        item  = min(top, key=lambda x: x["price"])
-        preco = float(item["price"])
+        preco = float(preco)
+        rep   = buscar_reputacao(seller_id, access_token)
+        print(f"    R${preco:.2f} | seller={seller_id} | rep={rep.get('level','?')} | vendas={rep.get('total_vendas','?')}")
 
-        rep   = _cache_reputacao.get(item["seller_id"], {})
-        ltype = item.get("shipping", {}).get("logistic_type", "?")
-        print(f"    R${preco:.2f} | rep={rep.get('level','?')} | logistic={ltype} | score={item['_score']} | vendas={rep.get('total_vendas','?')}")
-
-        # Descobrir o campo correto do item_id (pode ser "id", "item_id" ou "catalog_listing_id")
-        item_id = item.get("item_id")
-
-        # Busca nota do produto usando o item_id do melhor anúncio
         nota = buscar_nota_produto(item_id, mlb_produto_id, access_token) if item_id else None
 
         return preco, True, "ok", nota
@@ -324,7 +275,7 @@ def main():
             print(f"  {'OK' if ok else 'ERRO SUPABASE'} R${preco:.2f}{nota_str}")
             if ok: sucessos += 1
             else:  erros += 1
-        elif motivo == "sem_resultados":
+        elif motivo in ("sem_resultados", "sem_buybox"):
             marcar_disponibilidade(w["id"], False)
             print(f"  Sem resultados")
             sem_estoque += 1
