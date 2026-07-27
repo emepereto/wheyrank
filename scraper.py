@@ -187,43 +187,93 @@ def buscar_nota_produto(item_id, mlb_produto_id, access_token):
 
 # ── Score ────────────────────────────────────────────────────
 
+def calcular_score(item, rep):
+    score = 0
+    tags  = item.get("tags", [])
+    ship  = item.get("shipping", {})
+    level = rep["level"]
+    total = rep["total_vendas"]
+
+    # Reputação (fator principal)
+    if level == "5_green":         score += 100
+    elif level == "4_light_green": score += 80
+    elif level == "3_yellow":      score += 40
+    else:                          score -= 50
+
+    # Logística
+    if ship.get("logistic_type") == "fulfillment": score += 70
+    if ship.get("free_shipping"):                  score += 40
+    if item.get("official_store_id"):              score += 50
+
+    # Volume de vendas
+    if total > 1000:   score += 40
+    elif total > 100:  score += 20
+    elif total > 10:   score += 10
+
+    # Qualidade do anúncio
+    if "good_quality_thumbnail" in tags: score += 5
+    if "good_quality_picture"   in tags: score += 5
+
+    return score
+
 # ── Busca de preço ───────────────────────────────────────────
 
-
-
-
 def buscar_preco_ml(mlb_produto_id, access_token):
-    url = f"https://api.mercadolibre.com/products/{mlb_produto_id}"
+    url = f"https://api.mercadolibre.com/products/{mlb_produto_id}/items"
     try:
         resp = requests.get(
             url,
             headers={"Authorization": f"Bearer {access_token}"},
+            params={"limit": 30},
             timeout=15,
         )
 
         if resp.status_code == 401:
+            # LOG DETALHADO — para diagnosticar a causa real do 401
             print(f"    [DEBUG] 401 em {url}")
             print(f"    [DEBUG] Corpo da resposta: {resp.text[:300]}")
             return None, False, "token_expirado", None
-
         if resp.status_code != 200:
-            print(f"    [DEBUG] {resp.status_code} em {url}")
-            print(f"    [DEBUG] Corpo: {resp.text[:500]}")
+            print(f"    [DEBUG] {resp.status_code} em {url}: {resp.text[:300]}")
             return None, False, f"erro_{resp.status_code}", None
 
-        dados = resp.json()
-        buy_box = dados.get("buy_box_winner")
-        if not buy_box:
-            return None, False, "sem_buybox", None
+        resultados = resp.json().get("results", [])
+        if not resultados:
+            return None, False, "sem_resultados", None
 
-        preco = float(buy_box["price"])
-        item_id = buy_box.get("item_id")
-        seller_id = buy_box.get("seller_id")
+        # Pré-filtra os 15 mais baratos antes de buscar reputação
+        candidatos = sorted(resultados, key=lambda x: x["price"])[:15]
 
-        if seller_id:
-            rep = buscar_reputacao(seller_id, access_token)
-            print(f"    BuyBox seller={seller_id} rep={rep.get('level','?')} vendas={rep.get('total_vendas','?')}")
+        avaliados = []
+        for item in candidatos:
+            rep = buscar_reputacao(item["seller_id"], access_token)
+            if rep["level"] in ("1_red", "2_orange"):
+                continue
+            score          = calcular_score(item, rep)
+            item["_score"] = score
+            avaliados.append(item)
 
+        # Fallback se todos foram filtrados
+        if not avaliados:
+            avaliados = candidatos
+            for item in avaliados:
+                item["_score"] = 0
+
+        # Ordena por score, pega menor preço entre top terço
+        avaliados.sort(key=lambda x: -x["_score"])
+        top_n = max(1, len(avaliados) // 3)
+        top   = avaliados[:top_n]
+        item  = min(top, key=lambda x: x["price"])
+        preco = float(item["price"])
+
+        rep   = _cache_reputacao.get(item["seller_id"], {})
+        ltype = item.get("shipping", {}).get("logistic_type", "?")
+        print(f"    R${preco:.2f} | rep={rep.get('level','?')} | logistic={ltype} | score={item['_score']} | vendas={rep.get('total_vendas','?')}")
+
+        # Descobrir o campo correto do item_id (pode ser "id", "item_id" ou "catalog_listing_id")
+        item_id = item.get("item_id")
+
+        # Busca nota do produto usando o item_id do melhor anúncio
         nota = buscar_nota_produto(item_id, mlb_produto_id, access_token) if item_id else None
 
         return preco, True, "ok", nota
