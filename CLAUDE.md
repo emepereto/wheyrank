@@ -16,7 +16,10 @@ Site de afiliado (Mercado Livre) que ranqueia whey protein por **custo real por 
   O nome do arquivo TEM que bater com o link usado no index, no sitemap e no canonical.
 - `scraper.mjs` (+ `ml-pagina.mjs`): roda via GitHub Actions (`.github/workflows/main.yml`), lê o preço da página que o link de afiliado abre (API do ML bloqueia preços desde 23/11/2026) e grava no Supabase; depois `gerar.mjs` gera as páginas e faz commit.
   Secrets: SUPABASE_URL, SUPABASE_KEY (service_role). ML_APP_ID/ML_SECRET não são mais usados. `keep-alive.yml` evita o GitHub desativar o cron.
-- Links de afiliado ficam na coluna `link_ml` da tabela `wheys` (formato `mercadolivre.com.br/social/emepereto?...`).
+- Links de afiliado ficam na coluna `link_ml` das tabelas `wheys` e `creatinas` (formato `mercadolivre.com.br/social/emepereto?...` ou curto `meli.la/...`, gerado em mercadolivre.com.br/afiliados/linkbuilder, etiqueta "wheyrank").
+- Páginas geradas (não editar à mão; são refeitas a cada execução): `/whey/<slug>` (marca, faixa de preço, comparativos), `/creatina` e `/creatina/<marca>`, blocos `<!-- GERADO:... -->` no index e nos artigos, `sitemap.xml`.
+- `creatinas`: só monohidratada pura; ranking por preço por grama. Supabase: chave pública (anon) só lê; escrita só com service_role.
+- Critério de produto: whey 100% proteína do soro do leite (sem proteína de soja; lecitina de soja ok), marca conhecida, ficha técnica conferida.
 - Railway/Procfile/nixpacks/runtime.txt são legado (não usados).
 
 ## Checklist ao criar/alterar páginas
