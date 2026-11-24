@@ -48,6 +48,12 @@ header { background: var(--bg2); border-bottom: 1px solid var(--border); padding
 .dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; flex-shrink: 0; }
 @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
 
+/* ─── Abas de categoria ─── */
+.cat-tabs { max-width: 900px; margin: 0 auto; padding: 14px 24px 0; display: flex; gap: 8px; }
+.cat-tab { flex: 1; max-width: 220px; text-align: center; padding: 10px 16px; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg2); color: var(--text); text-decoration: none; font-family: var(--font-display); font-size: 18px; letter-spacing: 1px; transition: border-color .2s, background .2s; }
+.cat-tab:hover { border-color: var(--accent); }
+.cat-tab.ativo { background: var(--accent); color: #111; border-color: var(--accent); }
+
 /* ─── Hero ─── */
 .hero { padding: 14px 24px 8px; max-width: 900px; margin: 0 auto; }
 .hero h1 { font-family: var(--font-display); font-size: clamp(24px, 4.5vw, 38px); line-height: 1; letter-spacing: 1px; margin-bottom: 4px; }
@@ -243,6 +249,11 @@ footer a { color: var(--muted); }
     <span id="last-update-text">Atualizando...</span>
   </div>
 </header>
+
+<nav class="cat-tabs" aria-label="Categorias">
+  <a href="/" class="cat-tab ativo" aria-current="page">🥛 Whey Protein</a>
+  <a href="/creatina" class="cat-tab">⚡ Creatina</a>
+</nav>
 
 <section class="hero">
   <h1>Qual whey dá mais <em>proteína por real?</em></h1>
