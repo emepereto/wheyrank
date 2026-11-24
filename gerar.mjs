@@ -295,6 +295,112 @@ for (const p of paginas) {
   fs.writeFileSync(path.join('whey', url.replace('/whey/', '') + '.html'), html);
 }
 
+// ── Creatina ───────────────────────────────────────────────
+// Todas são monohidratada pura, então o ranking justo é preço por grama de creatina.
+const crResp = await fetch(`${SUPABASE_URL}/rest/v1/creatinas?select=*&ativo=eq.true`, {
+  headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+});
+const creatinas = (crResp.ok ? await crResp.json() : [])
+  .filter(c => c.preco_atual && c.disponivel !== false && (hoje - new Date(c.preco_atualizado_em)) / 864e5 <= DIAS_FRESCO)
+  .map(c => {
+    const preco = Number(c.preco_atual);
+    return { ...c, preco, porGrama: preco / c.peso_g, dose3: (preco / c.peso_g) * 3, doses: Math.round(c.peso_g / 3) };
+  })
+  .sort((a, b) => a.porGrama - b.porGrama);
+const nomeCr = c => `${c.nome} ${c.marca} ${c.peso_g}g${c.creapure ? ' (Creapure)' : ''}`;
+const btnCr = (c, txt = 'Comprar →') => c.link_ml ? `<a href="${esc(c.link_ml)}" target="_blank" rel="sponsored noopener" class="btn-ml" data-produto="${esc(nomeCr(c))}">${txt}</a>` : '';
+const ultimaCr = creatinas.map(c => c.preco_atualizado_em).filter(Boolean).sort().pop();
+
+function tabelaCr(lista) {
+  return `<div class="tabela-wrap"><table class="tabela">
+<thead><tr><th>#</th><th>Creatina</th><th>Pote</th><th>Por dose de 3g</th><th>R$/100g</th><th></th></tr></thead>
+<tbody>
+${lista.map((c, i) => `<tr><td class="pos">${i + 1}º</td><td><strong>${esc(nomeCr(c))}</strong><br><small>~${c.doses} doses de 3g · monohidratada pura</small></td><td>${brl(c.preco)}</td><td class="custo">${brl(c.dose3)}</td><td>${brl(c.porGrama * 100)}</td><td>${btnCr(c)}</td></tr>`).join('\n')}
+</tbody></table></div>
+<p class="nota-tab">Preços do Mercado Livre coletados em ${dataBR(ultimaCr)}; podem variar. Todas as creatinas da lista são 100% monohidratada, então comparamos o preço por grama.</p>`;
+}
+const itemListCr = (lista, nome) => ({
+  '@type': 'ItemList', name: nome,
+  itemListElement: lista.slice(0, 10).map((c, i) => ({
+    '@type': 'ListItem', position: i + 1,
+    item: { '@type': 'Product', name: nomeCr(c), brand: { '@type': 'Brand', name: c.marca },
+      offers: { '@type': 'Offer', price: c.preco.toFixed(2), priceCurrency: 'BRL', availability: 'https://schema.org/InStock', url: `https://www.mercadolivre.com.br/p/${c.ml_item_id}` } },
+  })),
+});
+
+const paginasCr = [];
+if (creatinas.length >= 3) {
+  const [c1, c2, c3] = creatinas;
+  const barata = [...creatinas].sort((a, b) => a.preco - b.preco)[0];
+  const creapure = creatinas.filter(c => c.creapure);
+  const comuns = creatinas.filter(c => !c.creapure);
+  const marcasCr = [...new Set(creatinas.map(c => c.marca))].sort();
+  const faqs = [
+    { q: 'Qual a melhor creatina custo-benefício?', a: `Hoje é a <strong>${esc(nomeCr(c1))}</strong>: ${brl(c1.preco)} o pote, ou ${brl(c1.dose3)} por dose de 3g. Em seguida vêm ${esc(nomeCr(c2))} e ${esc(nomeCr(c3))}.` },
+    { q: 'Qual a creatina mais barata?', a: `O pote mais barato é a ${esc(nomeCr(barata))}, por ${brl(barata.preco)}. Mas compare pelo preço por grama: potes maiores costumam sair mais em conta.` },
+    { q: 'Creatina monohidratada é tudo igual?', a: 'A substância é a mesma: creatina monohidratada. O que muda é pureza, controle de qualidade e preço. Por isso comparamos só creatinas 100% monohidratada, sem mistura com carboidratos ou outros ingredientes.' },
+    { q: 'Creapure vale a pena?', a: creapure.length && comuns.length ? `Creapure é uma matéria-prima alemã com controle de pureza conhecido. Hoje a creatina Creapure mais barata custa ${brl(Math.min(...creapure.map(c => c.dose3)))} por dose, contra ${brl(comuns[0].dose3)} da monohidratada comum mais barata. Vale se você prioriza a procedência; para a maioria, uma monohidratada de marca estabelecida resolve.` : 'Creapure é uma matéria-prima alemã com controle de pureza conhecido. Costuma custar bem mais por dose que a monohidratada comum.' },
+    { q: 'Quanto de creatina tomar por dia?', a: 'A dose mais usada nos estudos é de 3 a 5 g por dia, todos os dias, independente de treino. Se tiver alguma condição de saúde, converse com um médico ou nutricionista antes.' },
+  ];
+  const url = '/creatina';
+  geradas.unshift({ url, curto: 'Melhor creatina custo-benefício', tipo: 'creatina' });
+  paginasCr.push(() => ({
+    url, arquivo: 'creatina.html',
+    html: pagina({
+      url, tag: 'Ranking de creatina',
+      titulo: `Melhor Creatina Custo-Benefício (${MesAno}): Ranking por Preço por Grama`,
+      descricao: `Ranking das melhores creatinas monohidratadas pelo preço por grama, com preços atualizados do Mercado Livre. Hoje lidera: ${nomeCr(c1)} a ${brl(c1.dose3)} por dose.`,
+      h1: `Melhor creatina <em>custo-benefício</em>`,
+      corpo: `  <p>Comparamos <strong>${creatinas.length} creatinas monohidratadas puras</strong> de ${marcasCr.length} marcas pelo que importa: <strong>quanto você paga por grama de creatina</strong>. Como todas são a mesma substância, pote mais caro não significa creatina melhor.</p>
+  <div class="top3" style="background:#18191d;border:1px solid rgba(200,241,53,.3);border-radius:12px;padding:16px 18px;margin:24px 0;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#c8f135;margin-bottom:10px;">Top 3 creatinas hoje</div>
+    ${[c1, c2, c3].map((c, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:${i ? '1px solid #2e2f35' : 'none'};flex-wrap:wrap;"><span style="font-size:20px;">${['🥇', '🥈', '🥉'][i]}</span><span style="flex:1;min-width:160px;color:#e8e9ec;font-size:14px;font-weight:600;">${esc(nomeCr(c))}<br><span style="color:#7a7c84;font-size:12px;font-weight:400;">${brl(c.preco)} · ${brl(c.dose3)} por dose de 3g</span></span>${btnCr(c, 'Ver no Mercado Livre →')}</div>`).join('\n    ')}
+  </div>
+  <h2>Ranking completo de creatina</h2>
+  ${tabelaCr(creatinas)}
+  <h2>Como escolher creatina</h2>
+  <p>Procure <strong>creatina monohidratada</strong> com um único ingrediente no rótulo. Evite produtos com carboidratos, maltodextrina ou "complexos" misturados: você paga mais por menos creatina. Pote maior quase sempre sai mais barato por grama.</p>
+  ${faqHTML(faqs)}
+  ${linksRelacionados(url)}`,
+      ld: [faqLD(faqs), itemListCr(creatinas, 'Ranking de creatina custo-benefício')],
+    }),
+  }));
+
+  for (const m of marcasCr) {
+    const lista = creatinas.filter(c => c.marca === m);
+    const melhor = lista[0];
+    const pos = creatinas.indexOf(melhor) + 1;
+    const u = `/creatina/${slug(m)}`;
+    const fq = [
+      { q: `A creatina ${m} é boa?`, a: `A ${esc(nomeCr(melhor))} é creatina monohidratada pura, a forma mais estudada. No nosso ranking de preço por grama ela está em ${pos}º lugar entre ${creatinas.length} creatinas.` },
+      { q: `Quanto custa a creatina ${m}?`, a: lista.map(c => `${esc(nomeCr(c))}: ${brl(c.preco)} (${brl(c.dose3)} por dose de 3g)`).join('; ') + `, preços de ${dataBR(ultimaCr)}.` },
+      { q: `Qual creatina é mais barata que a ${m}?`, a: pos > 1 ? `Hoje a líder do ranking é a ${esc(nomeCr(creatinas[0]))}, a ${brl(creatinas[0].dose3)} por dose, contra ${brl(melhor.dose3)} da ${esc(m)}.` : `Nenhuma: a ${esc(m)} é a creatina com melhor preço por grama hoje.` },
+    ];
+    geradas.push({ url: u, curto: `Creatina ${m}`, tipo: 'creatina-marca' });
+    paginasCr.push(() => ({
+      url: u, arquivo: `creatina/${slug(m)}.html`,
+      html: pagina({
+        url: u, tag: 'Creatina por marca',
+        titulo: `Creatina ${m}: Preço e Vale a Pena? (${MesAno})`,
+        descricao: `Creatina ${m}: preço atualizado no Mercado Livre, custo por dose e posição no ranking de creatina custo-benefício (${pos}º de ${creatinas.length}).`,
+        h1: `Creatina <em>${esc(m)}</em> vale a pena?`,
+        corpo: `  <p>A <strong>${esc(nomeCr(melhor))}</strong> está em <strong>${pos}º lugar</strong> no ranking de creatina por preço por grama, entre ${creatinas.length} creatinas monohidratadas puras.</p>
+  <div style="margin:20px 0;">${btnCr(melhor, `Ver ${esc(m)} no Mercado Livre →`)}</div>
+  ${tabelaCr(lista)}
+  <h2>Comparada com as líderes</h2>
+  ${tabelaCr(creatinas.slice(0, 5))}
+  ${faqHTML(fq)}
+  ${linksRelacionados(u)}`,
+        ld: [faqLD(fq), itemListCr(lista, `Creatina ${m}`)],
+      }),
+    }));
+  }
+}
+fs.rmSync('creatina', { recursive: true, force: true });
+fs.rmSync('creatina.html', { force: true });
+if (paginasCr.length) fs.mkdirSync('creatina');
+for (const p of paginasCr) { const { arquivo, html } = p(); fs.writeFileSync(arquivo, html); }
+
 // ── Home ───────────────────────────────────────────────────
 {
   let html = fs.readFileSync('index.html', 'utf8');
@@ -331,11 +437,13 @@ ${cards}
     marca: ['Marca', g => 'Melhor whey ' + g.curto.replace('Whey ', ''), 'Preço e custo real de cada sabor'],
     faixa: ['Faixa de preço', g => g.curto, 'Os melhores para gastar pouco'],
     vs: ['Comparativo', g => g.curto, 'Qual compensa mais hoje'],
+    creatina: ['Novo · Creatina', g => g.curto, 'Ranking por preço por grama de creatina pura'],
+    'creatina-marca': ['Creatina', g => g.curto, 'Preço e posição no ranking'],
   };
   html = substituir(html, 'LINKS', `<div class="artigos-section">
   <div class="section-title">COMPARE POR MARCA, PREÇO E MARCA VS MARCA</div>
   <div class="artigos-grid">
-    ${geradas.map(g => `<a href="${g.url}" class="artigo-card"><div class="artigo-tag">${info[g.tipo][0]}</div><div class="artigo-titulo">${esc(info[g.tipo][1](g))}</div><div class="artigo-desc">${info[g.tipo][2]}</div></a>`).join('\n    ')}
+    ${geradas.filter(g => g.tipo !== 'creatina-marca').map(g => `<a href="${g.url}" class="artigo-card"><div class="artigo-tag">${info[g.tipo][0]}</div><div class="artigo-titulo">${esc(info[g.tipo][1](g))}</div><div class="artigo-desc">${info[g.tipo][2]}</div></a>`).join('\n    ')}
   </div>
 </div>`);
 

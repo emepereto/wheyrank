@@ -75,17 +75,46 @@ for (const w of wheys) {
   await dormir(1500);
 }
 
+// ── Creatinas (tabela própria, preço gravado direto na linha) ──
+const creatinas = (await supa('creatinas?select=id,nome,marca,peso_g,ml_item_id,link_ml,preco_atual&ativo=eq.true&order=id'))
+  .filter(c => c.link_ml);
+let okCr = 0;
+for (const c of creatinas) {
+  const label = `${c.marca} ${c.nome} ${c.peso_g}g`;
+  let r;
+  try { r = await precoPelaPagina(c.link_ml, c.ml_item_id); }
+  catch (e) { r = { status: 'erro_rede: ' + e.message }; }
+  if (r.status === 'ok') {
+    const ratio = c.preco_atual ? r.preco / Number(c.preco_atual) : 1;
+    if (ratio < 0.6 || ratio > 1.7) {
+      suspeitos.push(`${label}: R$${r.preco} (antes R$${c.preco_atual}) — "${r.titulo}"`);
+    } else {
+      const patch = { preco_atual: r.preco, preco_atualizado_em: new Date().toISOString(), disponivel: true };
+      if (r.nota) patch.nota = r.nota;
+      if (r.product_id && r.product_id !== c.ml_item_id) patch.ml_item_id = r.product_id;
+      await supa(`creatinas?id=eq.${c.id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+      okCr++;
+      console.log(`OK ${label}: R$${r.preco.toFixed(2)}`);
+    }
+  } else {
+    if (r.status === 'bloqueado_verificacao' || r.status.startsWith('http_4')) bloqueios++;
+    falhas.push(`${label} (${c.ml_item_id}): ${r.status}`);
+    console.log(`XX ${label}: ${r.status}`);
+  }
+  await dormir(1500);
+}
+
 // Diagnóstico: tipo da chave usada (nunca a chave em si)
 let tipoChave = 'desconhecido';
 if (SUPABASE_KEY.startsWith('sb_secret_')) tipoChave = 'secret';
 else if (SUPABASE_KEY.startsWith('sb_publishable_')) tipoChave = 'publishable (pública!)';
 else { try { tipoChave = JSON.parse(Buffer.from(SUPABASE_KEY.split('.')[1], 'base64url').toString()).role; } catch {} }
 
-const resumo = `### Scraper\nAtualizados: ${ok} de ${wheys.length} · chave Supabase: **${tipoChave}**\n\n` +
+const resumo = `### Scraper\nWheys: ${ok} de ${wheys.length} · Creatinas: ${okCr} de ${creatinas.length} · chave Supabase: **${tipoChave}**\n\n` +
   (falhas.length ? `**Falhas**\n${falhas.map(x => `- ${x}`).join('\n')}\n\n` : '') +
   (suspeitos.length ? `**Preço suspeito (não salvo)**\n${suspeitos.map(x => `- ${x}`).join('\n')}\n` : '');
 console.log('\n' + resumo);
 if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, resumo);
 
 // Se o ML bloqueou quase tudo, falha o job para aparecer em vermelho no GitHub
-if (bloqueios > wheys.length / 2) { console.error('Mercado Livre bloqueou a maioria das páginas.'); process.exit(2); }
+if (bloqueios > (wheys.length + creatinas.length) / 2) { console.error('Mercado Livre bloqueou a maioria das páginas.'); process.exit(2); }

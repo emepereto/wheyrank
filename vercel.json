@@ -31,6 +31,14 @@
     {
       "src": "/whey/(.*)",
       "dest": "/whey/$1.html"
+    },
+    {
+      "src": "/creatina",
+      "dest": "/creatina.html"
+    },
+    {
+      "src": "/creatina/(.*)",
+      "dest": "/creatina/$1.html"
     }
   ]
 }

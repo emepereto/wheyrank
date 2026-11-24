@@ -34,7 +34,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A index.html artigos whey sitemap.xml
+          git add -A
           if git diff --cached --quiet; then echo "Sem mudanças"; exit 0; fi
           git commit -m "chore: atualiza páginas com preços de hoje"
           git pull --rebase -q origin main
