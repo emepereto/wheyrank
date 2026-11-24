@@ -75,7 +75,13 @@ for (const w of wheys) {
   await dormir(1500);
 }
 
-const resumo = `### Scraper\nAtualizados: ${ok} de ${wheys.length}\n\n` +
+// Diagnóstico: tipo da chave usada (nunca a chave em si)
+let tipoChave = 'desconhecido';
+if (SUPABASE_KEY.startsWith('sb_secret_')) tipoChave = 'secret';
+else if (SUPABASE_KEY.startsWith('sb_publishable_')) tipoChave = 'publishable (pública!)';
+else { try { tipoChave = JSON.parse(Buffer.from(SUPABASE_KEY.split('.')[1], 'base64url').toString()).role; } catch {} }
+
+const resumo = `### Scraper\nAtualizados: ${ok} de ${wheys.length} · chave Supabase: **${tipoChave}**\n\n` +
   (falhas.length ? `**Falhas**\n${falhas.map(x => `- ${x}`).join('\n')}\n\n` : '') +
   (suspeitos.length ? `**Preço suspeito (não salvo)**\n${suspeitos.map(x => `- ${x}`).join('\n')}\n` : '');
 console.log('\n' + resumo);
