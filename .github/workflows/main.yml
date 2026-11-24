@@ -25,6 +25,9 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: node scraper.mjs
+      - name: Pegar a versão mais nova do repositório
+        # o scraper leva minutos; se alguém publicou nesse meio tempo, gera em cima da versão nova
+        run: git pull -q origin main
       - name: Gerar páginas
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -36,6 +39,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then echo "Sem mudanças"; exit 0; fi
-          git commit -m "chore: atualiza páginas com preços de hoje"
-          git pull --rebase -q origin main
+          git commit -q -m "chore: atualiza páginas com preços de hoje"
+          if ! git pull --rebase -q origin main; then
+            git rebase --abort
+            echo "::warning::Conflito com um commit novo; a próxima execução publica as páginas."
+            exit 0
+          fi
           git push
