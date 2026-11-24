@@ -23,6 +23,8 @@ const COMPARATIVOS = [
   ['Dux Nutrition', 'Growth Supplements'],
   ['Vitafor', 'Max Titanium'],
   ['Probiótica', 'Integralmedica'],
+  ['Soldiers Nutrition', 'Black Skull'],
+  ['Soldiers Nutrition', 'Max Titanium'],
 ];
 
 if (!SUPABASE_URL || !SUPABASE_KEY) { console.error('Defina SUPABASE_URL e SUPABASE_KEY'); process.exit(1); }
@@ -79,7 +81,7 @@ function tabela(lista, { mostrarPos = true } = {}) {
   return `<div class="tabela-wrap"><table class="tabela">
 <thead><tr>${mostrarPos ? '<th>#</th>' : ''}<th>Produto</th><th>Pote</th><th>Proteína</th><th>Custo p/ ${META}g prot</th><th></th></tr></thead>
 <tbody>
-${lista.map((w, i) => `<tr>${mostrarPos ? `<td class="pos">${i + 1}º</td>` : ''}<td><strong>${esc(nomeProd(w))}</strong><br><small>${w.peso_g}g · ${w.prot_por_dose}g prot/dose de ${w.dose_g}g</small></td><td>${brl(w.preco)}</td><td>${w.perc}%</td><td class="custo">${brl(w.custo)}</td><td>${btnML(w, 'Comprar →')}</td></tr>`).join('\n')}
+${lista.map((w, i) => `<tr>${mostrarPos ? `<td class="pos">${i + 1}º</td>` : ''}<td><strong>${esc(nomeProd(w))}</strong><br><small>${w.peso_g}g · ${w.prot_por_dose}g prot/dose de ${w.dose_g}g</small></td><td>${brl(w.preco)}</td><td>${w.perc}%${w.perc < 50 ? " ⚠ muito carboidrato" : ""}</td><td class="custo">${brl(w.custo)}</td><td>${btnML(w, 'Comprar →')}</td></tr>`).join('\n')}
 </tbody></table></div>
 <p class="nota-tab">Preços do Mercado Livre coletados em ${dataBR(ultimaColeta)}; podem variar. Custo = preço do pote ÷ nº de doses × (${META}g ÷ proteína por dose).</p>`;
 }
@@ -501,7 +503,7 @@ for (const p of paginasCr) { const { arquivo, html } = p(); fs.writeFileSync(arq
     const emoji = ['🥇', '🥈', '🥉'][i] || pos;
     return `<div class="card"><div class="card-pos ${clase}">${emoji}</div>
 <div class="card-info"><div class="card-name">${esc(w.nome)} · ${esc(w.marca)}${w.sabor ? ' · ' + esc(w.sabor) : ''}</div>
-<div class="card-pills"><span class="pill highlight">${w.perc}% prot</span><span class="pill">${w.prot_por_dose}g / ${w.dose_g}g dose</span><span class="pill">${w.num_doses} doses</span></div></div>
+<div class="card-pills">${w.perc < 50 ? `<span class="pill" style="border-color:rgba(255,92,92,.4);color:#ff5c5c;background:rgba(255,92,92,.07)">⚠ ${w.perc}% prot · muito carboidrato</span>` : `<span class="pill highlight">${w.perc}% prot</span>`}<span class="pill">${w.prot_por_dose}g / ${w.dose_g}g dose</span><span class="pill">${w.num_doses} doses</span></div></div>
 <div class="card-bottom-row"><div class="pote-block"><div class="pote-valor">${brl(w.preco)}</div><div class="pote-sub">pacote · ${w.peso_g}g</div></div>
 <div class="meta-block"><div class="meta-label">p/ ${META}g prot</div><div class="meta-custo">${brl(w.custo)}</div></div>
 ${w.link_ml ? `<a href="${esc(w.link_ml)}" target="_blank" rel="noopener sponsored" class="btn-ml">Mercado Livre →</a>` : ''}</div></div>`;

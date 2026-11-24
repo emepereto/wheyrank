@@ -580,7 +580,7 @@ function renderizarPagina() {
             ${w.nota ? `<span class="nota-ml"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>${w.nota.toFixed(1)}</span>` : ''}
           </div>
           <div class="card-pills">
-            <span class="pill highlight">${perc}% prot</span>
+            ${perc < 50 ? `<span class="pill" style="border-color:rgba(255,92,92,.4);color:#ff5c5c;background:rgba(255,92,92,.07)" title="Menos da metade da dose é proteína">⚠ ${perc}% prot · muito carboidrato</span>` : `<span class="pill highlight">${perc}% prot</span>`}
             <span class="pill">${w.prot_por_dose}g / ${w.dose_g}g dose</span>
             <span class="pill">${w.num_doses} doses</span>
             ${pillAntigo}
