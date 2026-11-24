@@ -128,6 +128,21 @@ def marcar_disponibilidade(whey_id, disponivel):
         json={"disponivel": disponivel},
     )
 
+def dias_sem_preco(whey_id):
+    try:
+        resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/precos",
+            headers=HEADERS_SUPA,
+            params={"select": "coletado_em", "whey_id": f"eq.{whey_id}", "order": "coletado_em.desc", "limit": 1},
+        )
+        dados = resp.json()
+        if not dados:
+            return 999
+        ultima = datetime.fromisoformat(dados[0]["coletado_em"][:19])
+        return (datetime.utcnow() - ultima).days
+    except Exception:
+        return 0
+
 # ── Reputação ────────────────────────────────────────────────
 
 def buscar_reputacao(seller_id, access_token):
@@ -216,8 +231,83 @@ def calcular_score(item, rep):
     return score
 
 # ── Busca de preço ───────────────────────────────────────────
+# Estratégia (v12): usar o MESMO anúncio que o Mercado Livre mostra quando a
+# pessoa abre o link — o "buy box winner" do produto de catálogo — e o preço de
+# venda atual dele (com promoção). Só se não houver buy box cai no cálculo antigo.
+
+def _get(url, access_token, params=None):
+    """GET com retry simples para 429/5xx."""
+    for tentativa in range(3):
+        try:
+            r = requests.get(url, headers={"Authorization": f"Bearer {access_token}"}, params=params, timeout=15)
+        except Exception as e:
+            print(f"    Erro de rede: {e}")
+            time.sleep(2)
+            continue
+        if r.status_code in (429, 500, 502, 503):
+            time.sleep(3 * (tentativa + 1))
+            continue
+        return r
+    return None
+
+
+def preco_de_venda(item_id, access_token):
+    """Preço que aparece na página do anúncio (já com promoção). None se indisponível."""
+    r = _get(f"https://api.mercadolibre.com/items/{item_id}/sale_price", access_token,
+             {"context": "channel_marketplace"})
+    if r is not None and r.status_code == 200:
+        amount = r.json().get("amount")
+        if amount:
+            return float(amount)
+    return None
+
+
+def buscar_preco_buybox(mlb_produto_id, access_token):
+    """Retorna (preco, item_id, status) usando o buy box do catálogo, ou o próprio item se o ID for de anúncio."""
+    r = _get(f"https://api.mercadolibre.com/products/{mlb_produto_id}", access_token)
+    if r is None:
+        return None, None, "erro_rede"
+    if r.status_code == 401:
+        return None, None, "token_expirado"
+
+    if r.status_code == 200:
+        bbw = r.json().get("buy_box_winner") or {}
+        item_id = bbw.get("item_id")
+        if not item_id:
+            return None, None, "sem_buybox"
+        preco = preco_de_venda(item_id, access_token) or bbw.get("price")
+        return (float(preco) if preco else None), item_id, "ok_buybox"
+
+    # ID não é de catálogo (ex.: anúncio MLB123...) → lê o anúncio direto
+    if r.status_code == 404:
+        ri = _get(f"https://api.mercadolibre.com/items/{mlb_produto_id}", access_token)
+        if ri is not None and ri.status_code == 200:
+            item = ri.json()
+            if item.get("status") != "active":
+                return None, None, "sem_resultados"
+            preco = preco_de_venda(mlb_produto_id, access_token) or item.get("price")
+            return (float(preco) if preco else None), mlb_produto_id, "ok_item"
+        return None, None, f"nao_encontrado_{r.status_code}"
+
+    return None, None, f"erro_{r.status_code}"
+
 
 def buscar_preco_ml(mlb_produto_id, access_token):
+    """Retorna (preco, disponivel, motivo, nota)."""
+    preco, item_id, motivo = buscar_preco_buybox(mlb_produto_id, access_token)
+    if motivo == "token_expirado":
+        return None, False, motivo, None
+    if preco:
+        print(f"    R${preco:.2f} | {motivo} | item={item_id}")
+        nota = buscar_nota_produto(item_id, mlb_produto_id, access_token)
+        return preco, True, "ok", nota
+    if motivo == "sem_resultados":
+        return None, False, motivo, None
+    print(f"    Sem buy box ({motivo}), usando cálculo antigo")
+    return buscar_preco_ml_antigo(mlb_produto_id, access_token)
+
+
+def buscar_preco_ml_antigo(mlb_produto_id, access_token):
     try:
         resp = requests.get(
             f"https://api.mercadolibre.com/products/{mlb_produto_id}/items",
@@ -297,6 +387,7 @@ def main():
     print(f"Produtos: {len(wheys)}\n")
 
     sucessos = erros = sem_estoque = 0
+    falhas = []
 
     for w in wheys:
         label = f"{w['marca']} {w.get('nome','')} {w.get('sabor','')}"
@@ -325,10 +416,20 @@ def main():
         else:
             print(f"  Falha: {motivo}")
             erros += 1
-
+            falhas.append(f"{label} ({w['ml_item_id']}): {motivo}")
+            # Se o preço não atualiza há mais de 7 dias, tira do ranking em vez de mostrar valor velho
+            if dias_sem_preco(w["id"]) > 7:
+                marcar_disponibilidade(w["id"], False)
+                print("  Preço com mais de 7 dias: marcado como indisponível")
 
     print("\n" + "=" * 52)
     print(f"Atualizados: {sucessos} | Sem estoque: {sem_estoque} | Erros: {erros}")
+    resumo = os.environ.get("GITHUB_STEP_SUMMARY")
+    if resumo:
+        with open(resumo, "a", encoding="utf-8") as f:
+            f.write(f"### Scraper\nAtualizados: {sucessos} | Sem estoque: {sem_estoque} | Erros: {erros}\n\n")
+            for x in falhas:
+                f.write(f"- {x}\n")
     print(f"Finalizado: {datetime.now().strftime('%H:%M:%S')}\n")
 
 

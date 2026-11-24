@@ -145,6 +145,8 @@ function pagina({ url, titulo, descricao, tag, h1, corpo, ld }) {
 <meta property="og:description" content="${esc(descricao)}">
 <meta property="og:type" content="article">
 <meta property="og:url" content="${SITE}${url}">
+<meta property="og:image" content="${SITE}/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>${CSS}</style>
@@ -192,7 +194,7 @@ for (const m of marcas) {
     { q: `Qual o whey ${m} mais barato?`, a: `O pote mais barato da ${esc(m)} no Mercado Livre é o <strong>${esc(nomeProd(barato))}</strong>, por ${brl(barato.preco)} (${barato.peso_g}g), preço de ${dataBR(barato.preco_atualizado_em)}.` },
     { q: `Quanto de proteína tem o whey ${m}?`, a: lista.map(w => `${esc(nomeProd(w))}: ${w.prot_por_dose}g por dose de ${w.dose_g}g (${w.perc}%)`).join('; ') + '. Dados do rótulo.' },
   ];
-  geradas.push({ url, curto: `Whey ${m}` });
+  geradas.push({ url, curto: `Whey ${m}`, tipo: 'marca' });
   paginas.push(() => ({
     url,
     html: pagina({
@@ -221,7 +223,7 @@ for (const m of marcas) {
       { q: `Qual o melhor whey até R$${FAIXA}?`, a: `Pelo custo por grama de proteína, hoje é o <strong>${esc(nomeProd(lista[0]))}</strong>: ${brl(lista[0].preco)}, ou ${brl(lista[0].custo)} para cada ${META}g de proteína.` },
       { q: `Whey barato é ruim?`, a: `Não necessariamente. O que importa é a proteína por dose e os ingredientes. Todos os produtos desta lista são 100% proteína do soro do leite, sem blend com soja, de marcas conhecidas.` },
     ];
-    geradas.push({ url, curto: `Whey até R$${FAIXA}` });
+    geradas.push({ url, curto: `Whey até R$${FAIXA}`, tipo: 'faixa' });
     paginas.push(() => ({
       url,
       html: pagina({
@@ -253,7 +255,7 @@ for (const [a, b] of COMPARATIVOS) {
     { q: `${a} ou ${b}: qual whey é melhor?`, a: `No custo por proteína, hoje vence a <strong>${esc(venc.marca)}</strong> com o ${esc(nomeProd(venc))}: ${brl(venc.custo)} por ${META}g de proteína, contra ${brl(perd.custo)} do melhor ${esc(perd.marca)}${dif > 0 ? ` (${dif}% mais barato)` : ''}.` },
     { q: `Qual tem mais proteína por dose, ${a} ou ${b}?`, a: `${esc(nomeProd(A))}: ${A.prot_por_dose}g em ${A.dose_g}g (${A.perc}%). ${esc(nomeProd(B))}: ${B.prot_por_dose}g em ${B.dose_g}g (${B.perc}%).` },
   ];
-  geradas.push({ url, curto: `${a} vs ${b}` });
+  geradas.push({ url, curto: `${a} vs ${b}`, tipo: 'vs' });
   paginas.push(() => ({
     url,
     html: pagina({
@@ -321,10 +323,15 @@ ${cards}
   ${faqs.map(f => `<details class="edu-card" style="margin-bottom:6px;"><summary class="edu-titulo" style="cursor:pointer;">${esc(f.q)}</summary><p class="edu-texto" style="margin-top:8px;">${f.a}</p></details>`).join('\n  ')}
 </div>`);
 
+  const info = {
+    marca: ['Marca', g => 'Melhor whey ' + g.curto.replace('Whey ', ''), 'Preço e custo real de cada sabor'],
+    faixa: ['Faixa de preço', g => g.curto, 'Os melhores para gastar pouco'],
+    vs: ['Comparativo', g => g.curto, 'Qual compensa mais hoje'],
+  };
   html = substituir(html, 'LINKS', `<div class="artigos-section">
-  <div class="section-title">RANKING POR MARCA, PREÇO E COMPARATIVOS</div>
-  <div style="display:flex;flex-wrap:wrap;gap:6px;">
-    ${geradas.map(g => `<a href="${g.url}" class="filtro-badge" style="text-decoration:none;font-size:12px;padding:4px 12px;">${esc(g.curto)}</a>`).join('\n    ')}
+  <div class="section-title">COMPARE POR MARCA, PREÇO E MARCA VS MARCA</div>
+  <div class="artigos-grid">
+    ${geradas.map(g => `<a href="${g.url}" class="artigo-card"><div class="artigo-tag">${info[g.tipo][0]}</div><div class="artigo-titulo">${esc(info[g.tipo][1](g))}</div><div class="artigo-desc">${info[g.tipo][2]}</div></a>`).join('\n    ')}
   </div>
 </div>`);
 
