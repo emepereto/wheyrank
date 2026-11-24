@@ -14,11 +14,9 @@
 <title>Melhor Whey Protein 2026: Ranking Custo Benefício (Atualizado)</title>
 <meta name="description" content="Compare o custo benefício real dos melhores wheys protein do Brasil. Calcule o valor por grama de proteína e ache onde comprar mais barato.">
 <meta name="keywords" content="whey protein melhor custo beneficio, comparador whey, whey protein barato, proteina por real">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="shortcut icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
 <link rel="apple-touch-icon" href="/favicon.png">
-<link rel="canonical" href="https://wheyrank.com.br/">
+<link rel="canonical" href="https://www.wheyrank.com.br/">
 <meta property="og:title" content="Comparador de Whey Protein — Custo Benefício Real">
 <meta property="og:description" content="Descubra qual whey entrega mais proteína por real investido.">
 <meta property="og:type" content="website">
@@ -386,9 +384,12 @@ async function carregarDados() {
     wheys = await resp.json();
     document.getElementById('skeleton').style.display = 'none';
     document.getElementById('ranking-list').style.display = 'flex';
-    const agora = new Date();
-    document.getElementById('last-update-text').textContent =
-      `${agora.toLocaleDateString('pt-BR')} às ${agora.getHours()}h`;
+    // Mostra a data real da coleta de preço mais recente (não a hora atual)
+    const datas = wheys.map(w => w.preco_atualizado_em).filter(Boolean).map(d => new Date(d));
+    const ultima = datas.length ? new Date(Math.max(...datas)) : null;
+    document.getElementById('last-update-text').textContent = ultima
+      ? `Preços de ${ultima.toLocaleDateString('pt-BR')} às ${ultima.getHours()}h`
+      : 'Preços do Mercado Livre';
     renderizar();
   } catch (err) {
     console.error(err);

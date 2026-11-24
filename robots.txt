@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://wheyrank.com.br/sitemap.xml
+Sitemap: https://www.wheyrank.com.br/sitemap.xml
