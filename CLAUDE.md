@@ -14,8 +14,8 @@ Site de afiliado (Mercado Livre) que ranqueia whey protein por **custo real por 
 - `index.html`: página única; o ranking é carregado no navegador via Supabase (view `ranking_wheys`).
 - `artigos/*.html`: artigos de SEO. Rota `/artigos/<slug>` → `artigos/<slug>.html` (ver `vercel.json`).
   O nome do arquivo TEM que bater com o link usado no index, no sitemap e no canonical.
-- `scraper.py`: roda via GitHub Actions (`.github/workflows/main.yml`), atualiza preços do ML no Supabase.
-  Secrets: SUPABASE_URL, SUPABASE_KEY, ML_APP_ID, ML_SECRET. `keep-alive.yml` evita o GitHub desativar o cron.
+- `scraper.mjs` (+ `ml-pagina.mjs`): roda via GitHub Actions (`.github/workflows/main.yml`), lê o preço da página que o link de afiliado abre (API do ML bloqueia preços desde 23/11/2026) e grava no Supabase; depois `gerar.mjs` gera as páginas e faz commit.
+  Secrets: SUPABASE_URL, SUPABASE_KEY (service_role). ML_APP_ID/ML_SECRET não são mais usados. `keep-alive.yml` evita o GitHub desativar o cron.
 - Links de afiliado ficam na coluna `link_ml` da tabela `wheys` (formato `mercadolivre.com.br/social/emepereto?...`).
 - Railway/Procfile/nixpacks/runtime.txt são legado (não usados).
 
