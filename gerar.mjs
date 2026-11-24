@@ -347,6 +347,38 @@ ${cards}
   fs.writeFileSync('index.html', html);
 }
 
+// ── Bloco dinâmico do artigo "whey importado" (consulta com mais impressões no Search Console) ──
+const IMPORTADAS = ['Optimum Nutrition', 'Dymatize', 'MuscleTech'];
+function blocoImportado() {
+  const imp = frescos.filter(w => IMPORTADAS.includes(w.marca));
+  const nac = frescos.filter(w => !IMPORTADAS.includes(w.marca));
+  if (!imp.length || !nac.length) return '';
+  const bi = imp[0], bn = nac[0];
+  const vezes = (bi.custo / bn.custo).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+  const faqs = [
+    { q: 'Whey importado vale a pena?', a: `Pelo custo de proteína, hoje não: o importado mais em conta (${esc(nomeProd(bi))}) sai a ${brl(bi.custo)} por ${META}g de proteína, ${vezes}x o melhor nacional (${esc(nomeProd(bn))}, ${brl(bn.custo)}). Vale para quem precisa de certificação antidoping ou acha o importado em promoção.` },
+    { q: 'Qual o melhor whey importado?', a: `Entre os importados que acompanhamos, o melhor custo-benefício hoje é o <strong>${esc(nomeProd(bi))}</strong>: ${brl(bi.preco)} o pote, ${bi.prot_por_dose}g de proteína por dose de ${bi.dose_g}g.` },
+    { q: 'Whey importado é melhor que o nacional?', a: 'Não necessariamente. Proteína do soro do leite é a mesma; a diferença está no preço (impostos e frete) e nas certificações internacionais. Um nacional de marca estabelecida com a mesma proteína por dose entrega o mesmo resultado.' },
+    { q: 'Como evitar whey importado falsificado?', a: 'Compre de lojas oficiais ou do anúncio principal do catálogo do Mercado Livre, confira lote e validade e desconfie de preço muito abaixo da média.' },
+  ];
+  return `<h2>Preço hoje: whey importado vs nacional</h2>
+  <p>Comparação atualizada automaticamente com os preços do Mercado Livre de ${dataBR(ultimaColeta)}. Hoje o importado mais em conta custa <strong>${vezes}x mais por grama de proteína</strong> que o melhor nacional.</p>
+  <h3>Importados</h3>
+  ${tabela(imp)}
+  <h3>Melhores nacionais</h3>
+  ${tabela(nac.slice(0, 5))}
+  ${faqHTML(faqs)}
+  ${ldScript([faqLD(faqs), itemListLD([...imp, ...nac.slice(0, 5)], 'Whey importado vs nacional')])}`;
+}
+const CSS_TABELA = `<style>
+.tabela-wrap{overflow-x:auto;margin:16px 0 6px}.tabela{width:100%;border-collapse:collapse;font-size:13px}
+.tabela th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#7a7c84;padding:6px 8px;border-bottom:1px solid #2e2f35}
+.tabela td{padding:9px 8px;border-bottom:1px solid #2e2f35;color:#7a7c84;vertical-align:middle}.tabela td strong{color:#e8e9ec}
+.tabela td.pos{font-family:'Bebas Neue',sans-serif;font-size:18px;color:#c8f135}.tabela td.custo{color:#c8f135;font-weight:700;white-space:nowrap}
+.tabela .btn-ml{display:inline-block;font-size:11px;font-weight:700;padding:6px 12px;border-radius:6px;text-decoration:none;background:#ffe600;color:#111;white-space:nowrap}
+.nota-tab{font-size:11px}h3{font-size:15px;color:#e8e9ec;margin:18px 0 6px}
+</style>`;
+
 // ── Artigos: Top 3 ─────────────────────────────────────────
 const artigos = fs.readdirSync('artigos').filter(f => f.endsWith('.html'));
 for (const f of artigos) {
@@ -354,6 +386,8 @@ for (const f of artigos) {
   let html = fs.readFileSync(p, 'utf8');
   if (!html.includes('<!-- GERADO:TOP3 -->')) html = html.replace('<div class="cta-box">', '<!-- GERADO:TOP3 -->\n<!-- /GERADO:TOP3 -->\n\n  <div class="cta-box">');
   html = substituir(html, 'TOP3', top3Box(frescos));
+  if (html.includes('<!-- GERADO:IMPORTADO -->')) html = substituir(html, 'IMPORTADO', CSS_TABELA + blocoImportado());
+  if (html.includes('<!-- GERADO:DATA -->')) html = substituir(html, 'DATA', `Atualizado em ${dataBR(ultimaColeta)} · 6 min de leitura`);
   fs.writeFileSync(p, html);
 }
 
