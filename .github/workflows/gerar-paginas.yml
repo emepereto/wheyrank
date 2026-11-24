@@ -1,0 +1,37 @@
+name: Gerar paginas estaticas
+on:
+  schedule:
+    # 2x por dia (9h30 e 21h30 de Brasília), depois das rodadas do scraper
+    - cron: "30 12 * * *"
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wheyrank-gerar
+  cancel-in-progress: false
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Gerar páginas
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: node gerar.mjs
+      - name: Publicar se mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A index.html artigos whey sitemap.xml
+          if git diff --cached --quiet; then echo "Sem mudanças"; exit 0; fi
+          git commit -m "chore: atualiza páginas com preços de hoje"
+          git push

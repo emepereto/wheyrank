@@ -1,9 +1,36 @@
 {
   "routes": [
-    { "src": "/artigos/como-ler-rotulo-de-whey", "status": 301, "headers": { "Location": "/artigos/como-ler-rotulo-whey-protein" } },
-    { "src": "/artigos/cuidado-com-whey-com-muito-carbo", "status": 301, "headers": { "Location": "/artigos/cuidado-whey-com-muito-carboidrato" } },
-    { "src": "/artigos/laudo-whey-como-verificar", "status": 301, "headers": { "Location": "/artigos/laudo-whey-protein-como-verificar" } },
-    { "handle": "filesystem" },
-    { "src": "/artigos/(.*)", "dest": "/artigos/$1.html" }
+    {
+      "src": "/artigos/como-ler-rotulo-de-whey",
+      "status": 301,
+      "headers": {
+        "Location": "/artigos/como-ler-rotulo-whey-protein"
+      }
+    },
+    {
+      "src": "/artigos/cuidado-com-whey-com-muito-carbo",
+      "status": 301,
+      "headers": {
+        "Location": "/artigos/cuidado-whey-com-muito-carboidrato"
+      }
+    },
+    {
+      "src": "/artigos/laudo-whey-como-verificar",
+      "status": 301,
+      "headers": {
+        "Location": "/artigos/laudo-whey-protein-como-verificar"
+      }
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/artigos/(.*)",
+      "dest": "/artigos/$1.html"
+    },
+    {
+      "src": "/whey/(.*)",
+      "dest": "/whey/$1.html"
+    }
   ]
 }
