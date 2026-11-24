@@ -19,6 +19,10 @@ const COMPARATIVOS = [
   ['Black Skull', 'Growth Supplements'],
   ['Integralmedica', 'Black Skull'],
   ['Integralmedica', 'Max Titanium'],
+  ['Optimum Nutrition', 'Max Titanium'],
+  ['Dux Nutrition', 'Growth Supplements'],
+  ['Vitafor', 'Max Titanium'],
+  ['Probiótica', 'Integralmedica'],
 ];
 
 if (!SUPABASE_URL || !SUPABASE_KEY) { console.error('Defina SUPABASE_URL e SUPABASE_KEY'); process.exit(1); }
