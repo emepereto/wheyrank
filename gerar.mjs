@@ -106,15 +106,12 @@ const faqLD = faqs => ({
   '@type': 'FAQPage',
   mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
 });
+// Lista ranqueada simples (sem Product/Offer): o site compara, não vende. Product+Offer fazia o
+// Google tratar as páginas como loja ("Listagens do comerciante") e exigir imagem, frete, devolução etc.
 const itemListLD = (lista, nome) => ({
-  '@type': 'ItemList', name: nome,
-  itemListElement: lista.slice(0, 10).map((w, i) => ({
-    '@type': 'ListItem', position: i + 1,
-    item: {
-      '@type': 'Product', name: nomeProd(w), brand: { '@type': 'Brand', name: w.marca },
-      offers: { '@type': 'Offer', price: w.preco.toFixed(2), priceCurrency: 'BRL', availability: 'https://schema.org/InStock', url: w.url_atual || w.link_ml },
-    },
-  })),
+  '@type': 'ItemList', name: nome, itemListOrder: 'https://schema.org/ItemListOrderAscending',
+  numberOfItems: Math.min(lista.length, 10),
+  itemListElement: lista.slice(0, 10).map((w, i) => ({ '@type': 'ListItem', position: i + 1, name: nomeProd(w) })),
 });
 const ldScript = objs => `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': objs }).replace(/</g, '\\u003c')}</script>`;
 
@@ -322,12 +319,9 @@ ${lista.map((c, i) => `<tr><td class="pos">${i + 1}º</td><td><strong>${esc(nome
 <p class="nota-tab">Preços do Mercado Livre coletados em ${dataBR(ultimaCr)}; podem variar. Todas as creatinas da lista são 100% monohidratada, então comparamos o preço por grama.</p>`;
 }
 const itemListCr = (lista, nome) => ({
-  '@type': 'ItemList', name: nome,
-  itemListElement: lista.slice(0, 10).map((c, i) => ({
-    '@type': 'ListItem', position: i + 1,
-    item: { '@type': 'Product', name: nomeCr(c), brand: { '@type': 'Brand', name: c.marca },
-      offers: { '@type': 'Offer', price: c.preco.toFixed(2), priceCurrency: 'BRL', availability: 'https://schema.org/InStock', url: `https://www.mercadolivre.com.br/p/${c.ml_item_id}` } },
-  })),
+  '@type': 'ItemList', name: nome, itemListOrder: 'https://schema.org/ItemListOrderAscending',
+  numberOfItems: Math.min(lista.length, 10),
+  itemListElement: lista.slice(0, 10).map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: nomeCr(c) })),
 });
 
 // Página /creatina no MESMO padrão visual da home do whey (abas, cards, "ver mais")
